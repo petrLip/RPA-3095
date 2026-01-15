@@ -1110,8 +1110,16 @@ class VgoProcessor:
                         }
                     )
 
-        # Сортируем по base_sum (убывание) как в VBA через PivotTable
-        opex_rows_to_write.sort(key=lambda x: -abs(x["base_sum"]))
+        # Сортировка:
+        # Первичный ключ: БЕ поставщика (убывание)
+        # Вторичный ключ: БЕ покупателя (возрастание)
+        # Третичный ключ: ЦФО операционное (возрастание)
+        # Четвёртый ключ: Статья операционная (возрастание)
+        # Используем stable sort: сначала по младшему ключу, потом по старшему
+        opex_rows_to_write.sort(key=lambda x: x["stat_oper"])  # 4-й ключ, возрастание
+        opex_rows_to_write.sort(key=lambda x: x["cfo_oper"])  # 3-й ключ, возрастание
+        opex_rows_to_write.sort(key=lambda x: x["be_buyer"])  # 2-й ключ, возрастание
+        opex_rows_to_write.sort(key=lambda x: x["be_supplier"], reverse=True)  # 1-й ключ, убывание
 
         # Записываем отсортированные данные
         data_row = opex_header_row + 1

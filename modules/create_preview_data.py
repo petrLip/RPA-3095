@@ -51,7 +51,8 @@ def read_excel_fast(
     target_sheet = (
         sheet_name if sheet_name and sheet_name in sheet_names else sheet_names[0]
     )
-    df = pd.read_excel(xl, sheet_name=target_sheet, header=header_row, engine=engine)
+    df = pd.read_excel(xl, sheet_name=target_sheet,
+                       header=header_row, engine=engine)
 
     return df, sheet_names
 
@@ -74,7 +75,8 @@ def dataframe_to_worksheet(
         include_index: Включить индекс
     """
     for r_idx, row in enumerate(
-        dataframe_to_rows(df, index=include_index, header=include_header), start_row
+        dataframe_to_rows(df, index=include_index,
+                          header=include_header), start_row
     ):
         for c_idx, value in enumerate(row, 1):
             if pd.notna(value):
@@ -314,7 +316,8 @@ class CreatePreviewDataProcessor:
                 else:
                     engine = "openpyxl"
 
-                log.info(f"Чтение файла Маржа через pandas (engine={engine})...")
+                log.info(
+                    f"Чтение файла Маржа через pandas (engine={engine})...")
 
                 # Читаем весь лист без заголовков для поиска нужных строк
                 df_raw = pd.read_excel(
@@ -333,7 +336,8 @@ class CreatePreviewDataProcessor:
                 for idx, row in df_raw.iterrows():
                     if "Исходные Данные" in str(row.values):
                         start_row_idx = idx
-                        log.info(f"Найдена строка 'Исходные Данные' в позиции {idx}")
+                        log.info(
+                            f"Найдена строка 'Исходные Данные' в позиции {idx}")
                         break
 
                 # Поиск колонки с "Накопительный Итог_Расходы поставщика"
@@ -367,11 +371,12 @@ class CreatePreviewDataProcessor:
                 )
 
                 # Обрезаем DataFrame - копируем данные НАЧИНАЯ со строки после "Исходные Данные"
-                df_data = df_raw.iloc[start_row_idx + 1 :, :last_col_idx].copy()
+                df_data = df_raw.iloc[start_row_idx + 1:, :last_col_idx].copy()
                 df_data.reset_index(drop=True, inplace=True)
 
                 # Записываем на лист МАРЖА
-                ws_marja = self.wb_macros.get_or_create_sheet(SHEET_NAMES["marja"])
+                ws_marja = self.wb_macros.get_or_create_sheet(
+                    SHEET_NAMES["marja"])
                 helper_marja = SheetHelper(ws_marja)
                 helper_marja.clear_sheet()
 
@@ -436,7 +441,8 @@ class CreatePreviewDataProcessor:
 
                     # Ищем заголовок
                     for idx, row in df_check.iterrows():
-                        row_str = " ".join(str(v) for v in row.values if pd.notna(v))
+                        row_str = " ".join(str(v)
+                                           for v in row.values if pd.notna(v))
                         if target_title in row_str:
                             target_sheet = sheet_name
                             log.info(f"Найден лист ВГО: {sheet_name}")
@@ -493,7 +499,8 @@ class CreatePreviewDataProcessor:
                 df_result.reset_index(drop=True, inplace=True)
 
                 # Создаём лист и записываем данные
-                ws_vgo = self.wb_macros.get_or_create_sheet("Данные_из_файла_по_ВГО")
+                ws_vgo = self.wb_macros.get_or_create_sheet(
+                    "Данные_из_файла_по_ВГО")
                 helper_vgo = SheetHelper(ws_vgo)
                 helper_vgo.clear_sheet()
 
@@ -657,7 +664,8 @@ class CreatePreviewDataProcessor:
                 be_cluster_set = self._get_mapping_be_set(
                     ws_map, "Информация о кластере ЦОД"
                 )
-                log.info(f"Загружено {len(be_cluster_set)} БЕ из мэппинга кластера ЦОД")
+                log.info(
+                    f"Загружено {len(be_cluster_set)} БЕ из мэппинга кластера ЦОД")
 
                 # Заполняем ЗНАЧЕНИЯ (не формулы)
                 for row in range(header_row + 1, max_row + 1):
@@ -728,7 +736,8 @@ class CreatePreviewDataProcessor:
                 break
             be_set.add(safe_str(val))
 
-        log.debug(f"Собрано {len(be_set)} значений БЕ из раздела {section_name}")
+        log.debug(
+            f"Собрано {len(be_set)} значений БЕ из раздела {section_name}")
         return be_set
 
     def _process_t2_clients(self):
@@ -741,8 +750,10 @@ class CreatePreviewDataProcessor:
         max_row = helper.max_row
 
         # Поиск колонок
-        found_buyer = helper.find_value("Наименование покупателя", partial=False)
-        found_be_load = helper.find_value("Наименование_БЕ Загрузка", partial=True)
+        found_buyer = helper.find_value(
+            "Наименование покупателя", partial=False)
+        found_be_load = helper.find_value(
+            "Наименование_БЕ Загрузка", partial=True)
 
         if not found_buyer or not found_be_load:
             log.warning("Не найдены колонки для обработки Т2")
@@ -762,7 +773,8 @@ class CreatePreviewDataProcessor:
             if buyer_name == "Т2":
                 # Если БЕ Загрузка != КЦ, ставим код 00902
                 if be_load_name != "КЦ" and self.marja_cols.be_load_code > 0:
-                    cell = ws_marja.cell(row=row, column=self.marja_cols.be_load_code)
+                    cell = ws_marja.cell(
+                        row=row, column=self.marja_cols.be_load_code)
                     cell.number_format = "@"
                     cell.value = "00902"
 
@@ -799,7 +811,8 @@ class CreatePreviewDataProcessor:
 
             # Приводим код поставщика к тексту
             if self.marja_cols.supplier_code > 0:
-                cell = ws_marja.cell(row=row, column=self.marja_cols.supplier_code)
+                cell = ws_marja.cell(
+                    row=row, column=self.marja_cols.supplier_code)
                 cell.number_format = "@"
                 cell.value = safe_str(cell.value)
 
@@ -824,7 +837,8 @@ class CreatePreviewDataProcessor:
                 value = safe_str(cell.value)
 
                 if len(value) < 3:
-                    formatter.highlight_cell(row, self.marja_cols.cfo_buyer, "red")
+                    formatter.highlight_cell(
+                        row, self.marja_cols.cfo_buyer, "red")
                     has_short_cfo = True
                     log.warning(f"Короткий ЦФО в строке {row}: '{value}'")
 
@@ -857,7 +871,8 @@ class CreatePreviewDataProcessor:
                 self._update_progress(
                     50 + iter_idx * 5, f"Обработка листа: {sheet_name}"
                 )
-                self._process_single_calc_sheet(sheet_name, iter_idx, pv_source_data)
+                self._process_single_calc_sheet(
+                    sheet_name, iter_idx, pv_source_data)
 
     def _get_pivot_source_data(
         self, ws: Worksheet, start_row: int, max_row: int, max_col: int
@@ -908,7 +923,8 @@ class CreatePreviewDataProcessor:
             log.warning(f"Нет данных в сводной таблице листа {sheet_name}")
             return
 
-        log.info(f"Лист {sheet_name}: найдено {len(pivot_data)} уникальных комбинаций")
+        log.info(
+            f"Лист {sheet_name}: найдено {len(pivot_data)} уникальных комбинаций")
 
         # Проверяем, есть ли реальные данные (не только "Общий итог")
         real_data = {
@@ -934,7 +950,8 @@ class CreatePreviewDataProcessor:
                 if is_t2
                 else "Информация о ЦФО и статье из ВГО"
             )
-            mapping_keys = self._get_mapping_keys(ws_map, mapping_section, is_t2)
+            mapping_keys = self._get_mapping_keys(
+                ws_map, mapping_section, is_t2)
             log.info(
                 f"Получено {len(mapping_keys)} ключей мэппинга для статуса анализа"
             )
@@ -949,13 +966,14 @@ class CreatePreviewDataProcessor:
         )
 
         if is_budget:
-            # Для листов БЮДЖЕТ - стандартная обработка с CAPEX мэппингом
-            mapping_section = "Информация о ЦФО и статье из бюджета CAPEX"
-            arr_map = self._get_mapping_data(ws_map, mapping_section)
+            # Для листов БЮДЖЕТ - второй блок использует мэппинг OPEX (не CAPEX!)
+            # VBA: Set FndVal = ShMap.Cells.Find("Информация о ЦФО и статье из бюджета OPEX"...)
+            opex_mapping_section = "Информация о ЦФО и статье из бюджета OPEX"
+            arr_map_opex = self._get_opex_mapping_data(ws_map, opex_mapping_section)
 
             # Создаём табличную часть с мэппингом (второй блок OPEX)
-            self._create_mapping_table(
-                ws_calc, pivot_data, arr_map, is_budget=True, is_vgo=False, is_t2=is_t2
+            self._create_mapping_table_opex(
+                ws_calc, pivot_data, arr_map_opex, is_t2=is_t2
             )
         else:
             # Для листов ВГО - ПОЛНАЯ обработка через VgoProcessor
@@ -981,7 +999,8 @@ class CreatePreviewDataProcessor:
                     f"результатов={len(vgo_result.arr_rpt)}"
                 )
             except Exception as e:
-                log.exception(f"Ошибка обработки ВГО для листа {sheet_name}: {e}")
+                log.exception(
+                    f"Ошибка обработки ВГО для листа {sheet_name}: {e}")
                 # В случае ошибки - используем упрощённую логику
                 log.warning(f"Используем упрощённую логику для {sheet_name}")
 
@@ -1016,7 +1035,8 @@ class CreatePreviewDataProcessor:
                 log.debug(f"Найдена колонка 'Кластер': индекс {i}")
             elif "Наименование покупателя" in h_str and buyer_idx is None:
                 buyer_idx = i
-                log.debug(f"Найдена колонка 'Наименование покупателя': индекс {i}")
+                log.debug(
+                    f"Найдена колонка 'Наименование покупателя': индекс {i}")
 
         if source_idx is None:
             log.warning("Колонка 'Источник' не найдена в данных")
@@ -1141,9 +1161,11 @@ class CreatePreviewDataProcessor:
 
         # Читаем данные начиная со строки 6 (после заголовка)
         for row in range(6, max_row + 1):
-            be_supplier = ws.cell(row=row, column=1).value  # Колонка A - БЕ поставщика
+            # Колонка A - БЕ поставщика
+            be_supplier = ws.cell(row=row, column=1).value
             cfo = ws.cell(row=row, column=2).value  # Колонка B - ЦФО
-            be_buyer = ws.cell(row=row, column=3).value  # Колонка C - БЕ покупателя
+            # Колонка C - БЕ покупателя
+            be_buyer = ws.cell(row=row, column=3).value
             sum_value = ws.cell(row=row, column=4).value  # Колонка D - Сумма
 
             if not be_supplier:
@@ -1188,7 +1210,8 @@ class CreatePreviewDataProcessor:
         if is_vgo:
             # Для листов ВГО T2 - заголовки с Договором
             if is_t2:
-                headers = ["БЕ + Договор", "БЕ поставщика", "Договор", "Статус анализа"]
+                headers = ["БЕ + Договор", "БЕ поставщика",
+                           "Договор", "Статус анализа"]
             else:
                 headers = [
                     "БЕ + ЦФО",
@@ -1213,22 +1236,26 @@ class CreatePreviewDataProcessor:
                 # БЕ + ЦФО/Договор
                 ws.cell(row=row, column=start_col, value=lookup_key)
                 # БЕ поставщика
-                ws.cell(row=row, column=start_col + 1, value=values["be_supplier"])
+                ws.cell(row=row, column=start_col + 1,
+                        value=values["be_supplier"])
                 # ЦФО/Договор
                 ws.cell(row=row, column=start_col + 2, value=values["cfo"])
                 # Статус анализа - проверяем наличие в мэппинге
                 if mapping_keys and lookup_key in mapping_keys:
                     ws.cell(row=row, column=start_col + 3, value="ОК")
                 elif mapping_keys:
-                    ws.cell(row=row, column=start_col + 3, value="Нет в мэппинге")
+                    ws.cell(row=row, column=start_col +
+                            3, value="Нет в мэппинге")
                 else:
-                    ws.cell(row=row, column=start_col + 3, value="ОК")  # Fallback
+                    ws.cell(row=row, column=start_col +
+                            3, value="ОК")  # Fallback
                 # № инвест. Договора - только для не-T2
                 if not is_t2:
                     ws.cell(row=row, column=start_col + 4, value=None)
                 row += 1
 
-            log.info(f"Записано {row - 6} строк данных (ВГО{'_T2' if is_t2 else ''})")
+            log.info(
+                f"Записано {row - 6} строк данных (ВГО{'_T2' if is_t2 else ''})")
         else:
             # Для листов БЮДЖЕТА - стандартная структура
             headers = [
@@ -1260,7 +1287,8 @@ class CreatePreviewDataProcessor:
                     value=f"{values['be_supplier']}{values['cfo']}",
                 )
                 # БЕ поставщика
-                ws.cell(row=row, column=start_col + 1, value=values["be_supplier"])
+                ws.cell(row=row, column=start_col + 1,
+                        value=values["be_supplier"])
                 # ЦФО КВ
                 ws.cell(row=row, column=start_col + 2, value=values["cfo"])
                 # Статья КВ
@@ -1280,7 +1308,8 @@ class CreatePreviewDataProcessor:
                 total_sum += calculated_sum
 
                 # БЕ покупателя
-                ws.cell(row=row, column=start_col + 6, value=values["be_buyer"])
+                ws.cell(row=row, column=start_col +
+                        6, value=values["be_buyer"])
                 row += 1
 
             # Check - формула суммы первого блока
@@ -1364,6 +1393,121 @@ class CreatePreviewDataProcessor:
 
         return result
 
+    def _get_opex_mapping_data(
+        self, ws_map: Worksheet, section_name: str
+    ) -> List[Dict[str, Any]]:
+        """
+        Получение данных мэппинга OPEX - эмуляция VBA логики.
+
+        VBA ищет каждую колонку по имени заголовка:
+        ArrTitle = Array("БЕ поставщика", "ЦФО операционное", "Статья операционная", "%")
+
+        Returns:
+            Список словарей с ключами: be_supplier, cfo_oper, stat_oper, percent
+        """
+        helper = SheetHelper(ws_map)
+        found = helper.find_value(section_name, partial=False)
+
+        if not found:
+            log.warning(f"Раздел OPEX мэппинга не найден: {section_name}")
+            return []
+
+        section_row, section_col = found
+        log.info(f"OPEX секция '{section_name}' найдена в строке {section_row}, колонка {section_col}")
+
+        # Определяем границы раздела (MergeArea в VBA)
+        merged = helper.get_merged_cell_range(section_row, section_col)
+        end_col = merged[3] if merged else section_col + 20
+        log.info(f"OPEX секция границы: от колонки {section_col} до {end_col}")
+
+        max_row = helper.max_row
+
+        # VBA: ArrTitle = Array("БЕ поставщика", "ЦФО операционное", "Статья операционная", "%")
+        required_columns = {
+            "БЕ поставщика": None,
+            "ЦФО операционное": None,
+            "Статья операционная": None,
+            "%": None,
+        }
+
+        # Ищем каждую колонку по имени в пределах секции
+        # VBA: Set FndCol = ShMap.Range(Cells(FndVal.Row, FndVal.Column), Cells(RowEndShMap, EndColBlk)).Find(ArrTitle(i)...)
+        # Сканируем все ячейки в секции для поиска заголовков
+        for row in range(section_row, min(section_row + 10, max_row)):
+            for col in range(section_col, min(end_col + 10, section_col + 30)):
+                val = ws_map.cell(row=row, column=col).value
+                if val:
+                    val_str = str(val).strip()
+                    for req_col in required_columns:
+                        if req_col in val_str and required_columns[req_col] is None:
+                            required_columns[req_col] = col
+                            log.info(f"OPEX мэппинг: найдена колонка '{req_col}' в ({row}, {col}), значение='{val_str}'")
+                            break
+
+        # Проверяем, что все колонки найдены
+        missing = [k for k, v in required_columns.items() if v is None]
+        if missing:
+            log.warning(f"OPEX мэппинг: не найдены колонки: {missing}")
+            # Выводим все заголовки для отладки
+            log.warning("Доступные заголовки в секции:")
+            for row in range(section_row, section_row + 5):
+                row_vals = []
+                for col in range(section_col, section_col + 15):
+                    v = ws_map.cell(row=row, column=col).value
+                    if v:
+                        row_vals.append(f"[{col}]={v}")
+                if row_vals:
+                    log.warning(f"  Строка {row}: {', '.join(row_vals)}")
+            return []
+
+        log.info(f"OPEX мэппинг '{section_name}': колонки = {required_columns}")
+
+        # Определяем строку начала данных (первая строка после заголовка с числовым БЕ)
+        be_col = required_columns["БЕ поставщика"]
+        header_row = section_row + 1
+
+        # Находим строку заголовков (где написано "БЕ поставщика")
+        for row in range(section_row, section_row + 5):
+            val = ws_map.cell(row=row, column=be_col).value
+            if val and "БЕ поставщика" in str(val):
+                header_row = row
+                break
+
+        # Данные начинаются после строки заголовков
+        data_start_row = header_row + 1
+        log.info(f"OPEX мэппинг: заголовки в строке {header_row}, данные начинаются с {data_start_row}")
+
+        # Собираем данные
+        result = []
+        for row in range(data_start_row, max_row + 1):
+            be_val = ws_map.cell(row=row, column=required_columns["БЕ поставщика"]).value
+            if not be_val or str(be_val).strip() == "":
+                break  # Пустая строка - конец данных
+
+            # Пропускаем заголовки
+            be_str = str(be_val).strip()
+            if be_str in ("БЕ поставщика", "БЕ"):
+                continue
+
+            cfo_oper = ws_map.cell(row=row, column=required_columns["ЦФО операционное"]).value
+            stat_oper = ws_map.cell(row=row, column=required_columns["Статья операционная"]).value
+            percent = ws_map.cell(row=row, column=required_columns["%"]).value
+
+            result.append({
+                "be_supplier": safe_str(be_val),
+                "cfo_oper": safe_str(cfo_oper),
+                "stat_oper": safe_str(stat_oper),
+                "percent": safe_float(percent, 100),
+            })
+
+        log.info(f"OPEX мэппинг '{section_name}': загружено {len(result)} записей")
+        if result:
+            log.info(f"Пример первой записи OPEX: {result[0]}")
+            if len(result) > 1:
+                log.info(f"Пример второй записи OPEX: {result[1]}")
+
+        return result
+
     def _get_mapping_keys(
         self, ws_map: Worksheet, section_name: str, is_t2: bool = False
     ) -> set:
@@ -1383,7 +1527,8 @@ class CreatePreviewDataProcessor:
         found = helper.find_value(section_name, partial=False)
 
         if not found:
-            log.warning(f"Раздел мэппинга для ключей не найден: {section_name}")
+            log.warning(
+                f"Раздел мэппинга для ключей не найден: {section_name}")
             return set()
 
         section_row, section_col = found
@@ -1418,7 +1563,8 @@ class CreatePreviewDataProcessor:
             if key_str.startswith("="):
                 be_val = safe_str(ws_map.cell(row=row, column=be_col).value)
                 cfo_val = (
-                    safe_str(ws_map.cell(row=row, column=cfo_or_contract_col + 1).value)
+                    safe_str(ws_map.cell(
+                        row=row, column=cfo_or_contract_col + 1).value)
                     if is_t2
                     else safe_str(
                         ws_map.cell(row=row, column=cfo_or_contract_col).value
@@ -1436,6 +1582,162 @@ class CreatePreviewDataProcessor:
             keys.add(key_str)
 
         return keys
+
+    def _create_mapping_table_opex(
+        self,
+        ws: Worksheet,
+        pivot_data: Dict,
+        opex_mapping: List[Dict[str, Any]],
+        is_t2: bool = False,
+    ):
+        """
+        Создание таблицы мэппинга OPEX на листе расчёта (второй блок).
+
+        Эмулирует VBA процедуру CreateSheetBEMap для TypeRpt=1 (БЮДЖЕТ).
+
+        Args:
+            ws: Лист расчёта
+            pivot_data: Данные из сводной таблицы
+            opex_mapping: Данные мэппинга OPEX (список словарей)
+            is_t2: True для T2 листов
+        """
+        helper = SheetHelper(ws)
+        # Между первым блоком и вторым: 2 пустые строки, Check, 1 пустая строка
+        current_row = helper.get_used_range_end(START_COL_ACCOUNT) + 5
+
+        # Заголовки для второго блока (OPEX)
+        headers = [
+            "БЕ + ЦФО",
+            "БЕ поставщика",
+            "ЦФО операционное",
+            "Статья операционная",
+            "%",
+            "Сумма расходов",
+            "Сумма расходов с накопительным итогом расчетная для формул",
+            "БЕ покупателя",
+        ]
+
+        for col_offset, header in enumerate(headers):
+            ws.cell(
+                row=current_row, column=START_COL_ACCOUNT + col_offset, value=header
+            )
+
+        # Создаём словарь мэппинга для быстрого поиска по БЕ поставщика
+        mapping_dict = {}
+        for map_item in opex_mapping:
+            be_key = map_item["be_supplier"]
+            if be_key not in mapping_dict:
+                mapping_dict[be_key] = []
+            mapping_dict[be_key].append(map_item)
+
+        log.info(
+            f"OPEX мэппинг: {len(mapping_dict)} уникальных БЕ поставщика, примеры: {list(mapping_dict.keys())[:5]}..."
+        )
+
+        # Создаём словарь сумм по ключу (БЕ поставщика, БЕ покупателя)
+        # VBA использует SUMIFS для суммирования всех записей с одинаковым БЕ+покупатель
+        sum_by_key = {}
+        for key, pv_values in pivot_data.items():
+            be_sup = safe_str(pv_values["be_supplier"])
+            be_buy = safe_str(pv_values["be_buyer"])
+            sum_key = (be_sup, be_buy)
+            pv_sum = safe_float(pv_values.get("sum", 0), 0)
+            if sum_key not in sum_by_key:
+                sum_by_key[sum_key] = 0
+            sum_by_key[sum_key] += pv_sum
+
+        log.info(f"Создан словарь сумм: {len(sum_by_key)} уникальных ключей (БЕ поставщика, БЕ покупателя)")
+
+        # VBA логика из CreateSheetBEMap:
+        # Для КАЖДОЙ уникальной пары (БЕ поставщика, БЕ покупателя) создаём записи
+        # с ВСЕми строками мэппинга для данного БЕ поставщика.
+        # ВАЖНО: не для каждой строки pivot_data (которая содержит разные ЦФО),
+        # а только для уникальных пар!
+
+        rows_to_write = []
+
+        # Итерируем по уникальным парам (БЕ поставщика, БЕ покупателя)
+        for (be_supplier, be_buyer), sum_acc in sum_by_key.items():
+            # Пропускаем "Общий итог"
+            if be_supplier == "Общий итог":
+                continue
+
+            # Для каждой уникальной пары берём ВСЕ строки мэппинга с тем же БЕ поставщика
+            if be_supplier in mapping_dict:
+                matched_rows = mapping_dict[be_supplier]
+
+                for map_item in matched_rows:
+                    cfo_oper = map_item["cfo_oper"]
+                    stat_oper = map_item["stat_oper"]
+                    percent_val = map_item["percent"]
+
+                    # VBA округляет % и если 0, то ставит 1
+                    percent_val = round(percent_val)
+                    if percent_val == 0:
+                        percent_val = 1
+
+                    # Пропускаем записи без ЦФО операционного
+                    if not cfo_oper:
+                        continue
+
+                    # Сумма расходов = сумма с накопительным итогом * процент / 100
+                    calculated_sum = sum_acc * percent_val / 100
+
+                    rows_to_write.append({
+                        "be_cfo": f"{be_supplier}{cfo_oper}",
+                        "be_supplier": be_supplier,
+                        "cfo_oper": cfo_oper,
+                        "stat_oper": stat_oper,
+                        "percent": percent_val,
+                        "sum": calculated_sum,
+                        "sum_acc": sum_acc,
+                        "be_buyer": be_buyer,
+                    })
+            else:
+                log.warning(f"БЕ поставщика '{be_supplier}' не найден в мэппинге OPEX!")
+
+        # Сортировка:
+        # Первичный ключ: БЕ поставщика (убывание)
+        # Вторичный ключ: БЕ покупателя (возрастание)
+        # Третичный ключ: ЦФО операционное (возрастание)
+        # Четвёртый ключ: Статья операционная (возрастание)
+        # Используем stable sort: сначала по младшему ключу, потом по старшему
+        rows_to_write.sort(key=lambda x: x["stat_oper"])  # 4-й ключ, возрастание
+        rows_to_write.sort(key=lambda x: x["cfo_oper"])  # 3-й ключ, возрастание
+        rows_to_write.sort(key=lambda x: x["be_buyer"])  # 2-й ключ, возрастание
+        rows_to_write.sort(key=lambda x: x["be_supplier"], reverse=True)  # 1-й ключ, убывание
+
+        log.info(f"Второй блок OPEX: {len(rows_to_write)} записей")
+
+        # Записываем данные
+        data_row = current_row + 1
+        for row_data in rows_to_write:
+            ws.cell(row=data_row, column=START_COL_ACCOUNT, value=row_data["be_cfo"])
+            ws.cell(row=data_row, column=START_COL_ACCOUNT + 1, value=row_data["be_supplier"])
+            ws.cell(row=data_row, column=START_COL_ACCOUNT + 2, value=row_data["cfo_oper"])
+            ws.cell(row=data_row, column=START_COL_ACCOUNT + 3, value=row_data["stat_oper"])
+            ws.cell(row=data_row, column=START_COL_ACCOUNT + 4, value=row_data["percent"])
+            ws.cell(row=data_row, column=START_COL_ACCOUNT + 5, value=row_data["sum"])
+            ws.cell(row=data_row, column=START_COL_ACCOUNT + 6, value=row_data["sum_acc"])
+            ws.cell(row=data_row, column=START_COL_ACCOUNT + 7, value=row_data["be_buyer"])
+            data_row += 1
+
+        # Check для второго блока
+        check_row = current_row - 2
+        sum_col = START_COL_ACCOUNT + 5
+        sum_col_letter = get_column_letter(sum_col)
+        last_data_row = data_row - 1
+
+        ws.cell(row=check_row, column=sum_col, value="Check")
+        ws.cell(
+            row=check_row,
+            column=sum_col + 1,
+            value=f"=SUM(${sum_col_letter}{current_row + 1}:${sum_col_letter}{last_data_row})",
+        )
+
+        log.info(
+            f"Создана таблица OPEX: {len(rows_to_write)} записей, Check в строке {check_row}"
+        )
 
     def _create_mapping_table(
         self,
@@ -1478,7 +1780,8 @@ class CreatePreviewDataProcessor:
             percent_offset = 4  # % в колонке K (offset 4)
             sum_offset = 5  # Сумма расходов в колонке L (offset 5)
             sum_acc_offset = (
-                6  # Сумма расходов с накопительным итогом в колонке M (offset 6)
+                # Сумма расходов с накопительным итогом в колонке M (offset 6)
+                6
             )
             buyer_offset = 7  # БЕ покупателя в колонке N (offset 7)
         else:
@@ -1506,28 +1809,23 @@ class CreatePreviewDataProcessor:
             )
 
         # Создаём словарь мэппинга для быстрого поиска
-        # Для CAPEX (is_budget=True) второй блок использует данные из ПРАВОЙ части мэппинга
-        # где БЕ поставщика находится в колонке [8]
+        # VBA для OPEX секции: ArrTitle = Array("БЕ поставщика", "ЦФО операционное", "Статья операционная", "%")
+        # Индексы в arr_map (загружен из секции OPEX):
+        #   [0] = БЕ поставщика
+        #   [1] = ЦФО операционное
+        #   [2] = Статья операционная
+        #   [3] = %
         mapping_dict = {}
         for map_row in arr_map:
-            if map_row:
-                if is_budget:
-                    # Для бюджета - ищем БЕ в правой части (колонка 8)
-                    if len(map_row) > 8 and map_row[8]:
-                        be_key = safe_str(map_row[8])
-                        if be_key not in mapping_dict:
-                            mapping_dict[be_key] = []
-                        mapping_dict[be_key].append(map_row)
-                else:
-                    # Для ВГО - используем левую часть (колонка 0)
-                    if map_row[0]:
-                        be_key = safe_str(map_row[0])
-                        if be_key not in mapping_dict:
-                            mapping_dict[be_key] = []
-                        mapping_dict[be_key].append(map_row)
+            if map_row and len(map_row) > 0 and map_row[0]:
+                # БЕ поставщика в первой колонке [0]
+                be_key = safe_str(map_row[0])
+                if be_key not in mapping_dict:
+                    mapping_dict[be_key] = []
+                mapping_dict[be_key].append(map_row)
 
         log.info(
-            f"Загружено {len(mapping_dict)} уникальных БЕ из мэппинга (правая часть): {list(mapping_dict.keys())[:10]}..."
+            f"Загружено {len(mapping_dict)} уникальных БЕ из мэппинга OPEX: {list(mapping_dict.keys())[:10]}..."
         )
 
         # Создаём словарь сумм по ключу (БЕ поставщика, БЕ покупателя)
@@ -1574,12 +1872,21 @@ class CreatePreviewDataProcessor:
                 # Собираем строки для этой записи pivot_data
                 pivot_rows = []
                 for map_row in matched_rows:
-                    # Структура мэппинга CAPEX: [11]=ЦФО опер., [12]=Статья опер., [14]=%
-                    cfo_oper = safe_str(map_row[11]) if len(map_row) > 11 else ""
-                    stat_oper = safe_str(map_row[12]) if len(map_row) > 12 else ""
-                    percent_val = (
-                        safe_float(map_row[14], 100) if len(map_row) > 14 else 100
-                    )
+                    # Структура мэппинга OPEX (из секции "Информация о ЦФО и статье из бюджета OPEX"):
+                    # VBA: ArrTitle = Array("БЕ поставщика", "ЦФО операционное", "Статья операционная", "%")
+                    # [0] = БЕ поставщика
+                    # [1] = ЦФО операционное
+                    # [2] = Статья операционная
+                    # [3] = %
+                    cfo_oper = safe_str(map_row[1]) if len(map_row) > 1 else ""
+                    stat_oper = safe_str(map_row[2]) if len(map_row) > 2 else ""
+                    percent_val = safe_float(map_row[3], 100) if len(map_row) > 3 else 100
+
+                    # VBA округляет % и если 0, то ставит 1
+                    # If ShBEMap.Cells(iRow, j).Value = 0 Then ShBEMap.Cells(iRow, j).Value = 1
+                    percent_val = round(percent_val)
+                    if percent_val == 0:
+                        percent_val = 1
 
                     # Пропускаем записи без ЦФО операционного
                     if not cfo_oper:
@@ -1601,12 +1908,11 @@ class CreatePreviewDataProcessor:
                         }
                     )
 
-                # Сортируем строки для этой записи по ЦФО операционному
-                pivot_rows.sort(key=lambda x: x["cfo_oper"])
                 rows_to_write.extend(pivot_rows)
             else:
                 # Если нет мэппинга, добавляем строку с базовыми данными
-                log.warning(f"БЕ поставщика '{be_supplier}' не найден в мэппинге!")
+                log.warning(
+                    f"БЕ поставщика '{be_supplier}' не найден в мэппинге OPEX!")
                 rows_to_write.append(
                     {
                         "be_cfo": f"{pv_values['be_supplier']}{pv_values['cfo']}",
@@ -1620,13 +1926,18 @@ class CreatePreviewDataProcessor:
                     }
                 )
 
-        log.info(f"Второй блок: отсортировано {len(rows_to_write)} записей")
+        # VBA сортирует по БЕ поставщика в убывающем порядке:
+        # ShSvPvt.PivotTables("Pvt_BE").PivotFields("БЕ поставщика").AutoSort xlDescending, "БЕ поставщика"
+        rows_to_write.sort(key=lambda x: x["be_supplier"], reverse=True)
+
+        log.info(f"Второй блок: отсортировано {len(rows_to_write)} записей по БЕ поставщика (убывание)")
 
         # Записываем отсортированные данные
         data_row = current_row + 1
         for row_data in rows_to_write:
             # БЕ + ЦФО
-            ws.cell(row=data_row, column=START_COL_ACCOUNT, value=row_data["be_cfo"])
+            ws.cell(row=data_row, column=START_COL_ACCOUNT,
+                    value=row_data["be_cfo"])
             # БЕ поставщика
             ws.cell(
                 row=data_row,
