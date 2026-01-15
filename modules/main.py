@@ -8,11 +8,11 @@ Python-версия VBA макросов для обработки Excel дан�
 Поддерживает Windows и Linux.
 
 Использование:
-    python main.py              # Запуск GUI приложения
-    python main.py --test       # ТЕСТОВЫЙ РЕЖИМ - автопоиск файлов в data/
-    python main.py --cli 1      # Запуск блока 1 из командной строки
-    python main.py --cli 2      # Запуск блока 2 из командной строки
-    python main.py --help       # Справка
+    python modules/main.py              # Запуск GUI приложения
+    python modules/main.py --test       # ТЕСТОВЫЙ РЕЖИМ - автопоиск файлов в data/
+    python modules/main.py --cli 1      # Запуск блока 1 из командной строки
+    python modules/main.py --cli 2      # Запуск блока 2 из командной строки
+    python modules/main.py --help       # Справка
 """
 
 import sys
@@ -20,12 +20,12 @@ import argparse
 from pathlib import Path
 
 # Добавляем корневую директорию в путь поиска модулей
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.logger import log, setup_logger
+from modules.logger import log, setup_logger
 
 # Папка с тестовыми данными
-DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR = Path(__file__).parent.parent / "data"
 
 
 def find_test_files():
@@ -62,10 +62,10 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Примеры использования:
-  python main.py                                    # Запуск GUI
-  python main.py --test                             # Тестовый режим (автопоиск файлов)
-  python main.py --cli 1 --macros file.xlsm --marja marja.xlsx --vgo vgo.xlsb
-  python main.py --cli 2 --macros file.xlsm
+  python modules/main.py                                    # Запуск GUI
+  python modules/main.py --test                             # Тестовый режим (автопоиск файлов)
+  python modules/main.py --cli 1 --macros file.xlsm --marja marja.xlsx --vgo vgo.xlsb
+  python modules/main.py --cli 2 --macros file.xlsm
         """,
     )
 
@@ -107,8 +107,8 @@ def parse_args():
 
 def run_cli(args):
     """Запуск в режиме командной строки"""
-    from src.create_preview_data import create_preview_data
-    from src.unload_corr import unload_corr
+    from modules.create_preview_data import create_preview_data
+    from modules.unload_corr import unload_corr
 
     def progress_callback(percent, message):
         print(f"[{percent:3d}%] {message}")
@@ -165,7 +165,7 @@ def run_cli(args):
 
 def run_test():
     """Тестовый режим: автоматический поиск файлов и запуск"""
-    from src.create_preview_data import create_preview_data
+    from modules.create_preview_data import create_preview_data
 
     def progress_callback(percent, message):
         print(f"[{percent:3d}%] {message}")
@@ -214,7 +214,7 @@ def run_test():
 def run_gui():
     """Запуск GUI приложения"""
     try:
-        from src.gui import run_app
+        from modules.gui import run_app
 
         log.info("Запуск GUI приложения...")
         run_app()

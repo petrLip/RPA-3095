@@ -7,8 +7,8 @@ from typing import List, Dict, Any, Optional
 from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.utils import get_column_letter
 
-from src.excel_handler import SheetHelper, TableFormatter
-from src.logger import log, Timer
+from modules.excel_handler import SheetHelper, TableFormatter
+from modules.logger import log, Timer
 
 
 def search_arr_col(

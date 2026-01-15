@@ -12,9 +12,9 @@ from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.utils import get_column_letter
 
-from src.excel_handler import ExcelHandler, SheetHelper, TableFormatter
-from src.helpers import search_arr_col, format_table, safe_str, safe_float
-from src.logger import log, timing, Timer
+from modules.excel_handler import ExcelHandler, SheetHelper, TableFormatter
+from modules.helpers import search_arr_col, format_table, safe_str, safe_float
+from modules.logger import log, timing, Timer
 
 
 # Названия листов

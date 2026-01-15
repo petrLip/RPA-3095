@@ -21,7 +21,7 @@ try:
 except ImportError:
     open_xlsb = None
 
-from src.logger import log, timing, Timer
+from modules.logger import log, timing, Timer
 
 
 class ExcelHandler:

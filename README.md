@@ -49,38 +49,38 @@ pip install -r requirements.txt
 ### GUI режим (рекомендуется)
 
 ```bash
-python main.py
+python modules/main.py
 ```
 
 ### CLI режим
 
 ```bash
 # Блок 1: Создание предварительных листов
-python main.py --cli 1 \
+python modules/main.py --cli 1 \
     --macros "path/to/macros.xlsm" \
     --marja "path/to/marja.xlsx" \
     --vgo "path/to/vgo.xlsb"
 
 # Блок 2: Создание корректировки
-python main.py --cli 2 --macros "path/to/macros.xlsm"
+python modules/main.py --cli 2 --macros "path/to/macros.xlsm"
 ```
 
 ### Справка
 
 ```bash
-python main.py --help
+python modules/main.py --help
 ```
 
 ## 📁 Структура проекта
 
 ```
 RPA-3095-V2/
-├── main.py                 # Главный файл запуска
 ├── requirements.txt        # Зависимости Python
 ├── README.md              # Документация
 │
-├── src/
+├── modules/
 │   ├── __init__.py
+│   ├── main.py            # Главный файл запуска
 │   ├── logger.py          # Модуль логирования и тайминга
 │   ├── excel_handler.py   # Модуль работы с Excel
 │   ├── helpers.py         # Вспомогательные функции

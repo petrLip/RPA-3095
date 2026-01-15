@@ -31,9 +31,9 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QThread, Signal, QSize
 from PySide6.QtGui import QFont, QColor, QPalette, QIcon
 
-from src.create_preview_data import create_preview_data, ProcessingResult
-from src.unload_corr import unload_corr
-from src.logger import log
+from modules.create_preview_data import create_preview_data, ProcessingResult
+from modules.unload_corr import unload_corr
+from modules.logger import log
 
 
 # Стили CSS для приложения (светлая тема)
