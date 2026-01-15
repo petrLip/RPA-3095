@@ -589,63 +589,77 @@ class TableFormatter:
                 block['end_col']
             )
 
-        # Заголовок
-        for col in range(7, max_col + 1):
-            cell = self.ws.cell(row=start_row, column=col)
-            cell.font = Font(bold=True, size=10)
-            cell.alignment = Alignment(
-                horizontal="center", vertical="center", wrap_text=True
-            )
+        # Форматирование заголовков для каждого блока таблицы
+        for block in table_blocks:
+            block_start_row = block['start_row']
+            block_start_col = block['start_col']
+            block_end_col = block['end_col']
+            
+            for col in range(block_start_col, block_end_col + 1):
+                cell = self.ws.cell(row=block_start_row, column=col)
+                cell.font = Font(bold=True, size=10)
+                cell.alignment = Alignment(
+                    horizontal="center", vertical="center", wrap_text=True
+                )
+            
+            self.helper.set_row_height(block_start_row, 40)
 
-        self.helper.set_row_height(start_row, 40)
+        # Установка ширины колонок и форматов для каждого блока таблицы
+        for block in table_blocks:
+            block_start_row = block['start_row']
+            block_end_row = block['end_row']
+            block_start_col = block['start_col']
+            block_end_col = block['end_col']
+            
+            for col in range(block_start_col, block_end_col + 1):
+                header = self.ws.cell(row=block_start_row, column=col).value
 
-        # Находим последнюю строку по колонке 7 для форматирования чисел
-        last_row = self.helper.get_used_range_end(7)
+                if header in ["Сумма расходов", "Сумма расходов с накопительным итогом"]:
+                    for row in range(block_start_row, block_end_row + 1):
+                        self.ws.cell(
+                            row=row, column=col).number_format = "#,##0.00"
+                    self.helper.set_column_width(col, 30)
 
-        # Установка ширины колонок и форматов
-        for col in range(7, max_col + 1):
-            header = self.ws.cell(row=start_row, column=col).value
+                    if header == "Сумма расходов с накопительным итогом":
+                        self.ws.cell(
+                            row=block_start_row, column=col
+                        ).value = (
+                            "Сумма расходов с накопительным итогом расчетная для формул"
+                        )
 
-            if header in ["Сумма расходов", "Сумма расходов с накопительным итогом"]:
-                for row in range(start_row, last_row + 1):
-                    self.ws.cell(
-                        row=row, column=col).number_format = "#,##0.00"
-                self.helper.set_column_width(col, 30)
+                elif header in ["БЕ + ЦФО", "БЕ поставщика", "ЦФО КВ", "Статья КВ"]:
+                    self.helper.set_column_width(col, 12)
 
-                if header == "Сумма расходов с накопительным итогом":
-                    self.ws.cell(
-                        row=start_row, column=col
-                    ).value = (
-                        "Сумма расходов с накопительным итогом расчетная для формул"
-                    )
+                elif header in [
+                    "БЕ покупателя",
+                    "ЦФО операционное",
+                    "Статья операционная",
+                    "Статус анализа",
+                ]:
+                    self.helper.set_column_width(col, 15)
 
-            elif header in ["БЕ + ЦФО", "БЕ поставщика", "ЦФО КВ", "Статья КВ"]:
-                self.helper.set_column_width(col, 12)
+                elif header == "№ инвест. Договора":
+                    self.helper.set_column_width(col, 50)
 
-            elif header in [
-                "БЕ покупателя",
-                "ЦФО операционное",
-                "Статья операционная",
-                "Статус анализа",
-            ]:
-                self.helper.set_column_width(col, 15)
-
-            elif header == "№ инвест. Договора":
-                self.helper.set_column_width(col, 50)
-
-        # Цветовое оформление заголовка
+        # Цветовое оформление заголовков таблиц
+        # Применяем заливку только к заголовкам найденных блоков таблиц
         sheet_name = self.ws.title
-        for col in range(7, max_col + 1):
-            cell = self.ws.cell(row=start_row, column=col)
+        for block in table_blocks:
+            block_start_row = block['start_row']
+            block_start_col = block['start_col']
+            block_end_col = block['end_col']
+            
+            for col in range(block_start_col, block_end_col + 1):
+                cell = self.ws.cell(row=block_start_row, column=col)
 
-            if "БЮДЖЕТ" in sheet_name and "T2" not in sheet_name:
-                cell.fill = self.FILL_COLORS["green_light"]
-            elif "ОТЧЕТА ВГО" in sheet_name and "T2" not in sheet_name:
-                cell.fill = self.FILL_COLORS["yellow_light"]
-            elif "БЮДЖЕТ" in sheet_name and "T2" in sheet_name:
-                cell.fill = self.FILL_COLORS["blue_light"]
-            elif "ОТЧЕТА ВГО" in sheet_name and "T2" in sheet_name:
-                cell.fill = self.FILL_COLORS["orange_light"]
+                if "БЮДЖЕТ" in sheet_name and "T2" not in sheet_name:
+                    cell.fill = self.FILL_COLORS["green_light"]
+                elif "ОТЧЕТА ВГО" in sheet_name and "T2" not in sheet_name:
+                    cell.fill = self.FILL_COLORS["yellow_light"]
+                elif "БЮДЖЕТ" in sheet_name and "T2" in sheet_name:
+                    cell.fill = self.FILL_COLORS["blue_light"]
+                elif "ОТЧЕТА ВГО" in sheet_name and "T2" in sheet_name:
+                    cell.fill = self.FILL_COLORS["orange_light"]
 
         # Ширина служебных колонок
         self.helper.set_column_width(5, 5)
