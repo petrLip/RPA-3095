@@ -922,7 +922,9 @@ class CreatePreviewDataProcessor:
             filtered_data = self._filter_data_for_sheet(
                 source_data, is_budget, is_t2, is_cod
             )
-            pivot_data = self._create_pivot_data(filtered_data)
+            pivot_data = self._create_pivot_data(
+                filtered_data, is_vgo=is_vgo, is_t2=is_t2
+            )
 
             if pivot_data:
                 # Очищаем текущую сводную A:D
@@ -933,7 +935,11 @@ class CreatePreviewDataProcessor:
 
                 # Записываем сводную в порядке убывания суммы, как в VBA
                 self._write_summary_table(
-                    ws_calc, pivot_data, sort_by_sum_desc=True
+                    ws_calc,
+                    pivot_data,
+                    sort_by_sum_desc=True,
+                    is_vgo=is_vgo,
+                    is_t2=is_t2,
                 )
         else:
             # Используем существующие данные из сводной таблицы A-D
@@ -1094,7 +1100,9 @@ class CreatePreviewDataProcessor:
 
         return result
 
-    def _create_pivot_data(self, data: List[List[Any]]) -> Dict[str, Dict]:
+    def _create_pivot_data(
+        self, data: List[List[Any]], is_vgo: bool = False, is_t2: bool = False
+    ) -> Dict[str, Dict]:
         """Создание сводных данных (группировка)"""
         if not data or len(data) < 2:
             return {}
@@ -1111,7 +1119,9 @@ class CreatePreviewDataProcessor:
             h_str = safe_str(h)
             if "Код_Поставщик" in h_str:
                 be_sup_idx = i
-            elif "ЦФО покупателя" in h_str:
+            elif is_vgo and is_t2 and "№ инвест. Договора" in h_str:
+                cfo_idx = i
+            elif "ЦФО покупателя" in h_str and not (is_vgo and is_t2):
                 cfo_idx = i
             elif "Код_БЕ Загрузка" in h_str or "БЕ покупателя" in h_str:
                 be_buy_idx = i
@@ -1145,13 +1155,21 @@ class CreatePreviewDataProcessor:
         return pivot
 
     def _write_summary_table(
-        self, ws: Worksheet, pivot_data: Dict, sort_by_sum_desc: bool = False
+        self,
+        ws: Worksheet,
+        pivot_data: Dict,
+        sort_by_sum_desc: bool = False,
+        is_vgo: bool = False,
+        is_t2: bool = False,
     ):
         """Запись сводной таблицы (A-D)"""
         # Заголовки
+        cfo_header = "ЦФО покупателя"
+        if is_vgo and is_t2:
+            cfo_header = "Договор"
         headers = [
             "БЕ поставщика",
-            "ЦФО покупателя",
+            cfo_header,
             "БЕ покупателя",
             "Сумма расходов с накопительным итогом",
         ]
@@ -1161,6 +1179,7 @@ class CreatePreviewDataProcessor:
 
         # Данные
         row = 6
+        total_sum = 0
         items = pivot_data.items()
         if sort_by_sum_desc:
             items = sorted(
@@ -1172,7 +1191,13 @@ class CreatePreviewDataProcessor:
             ws.cell(row=row, column=2, value=values["cfo"])
             ws.cell(row=row, column=3, value=values["be_buyer"])
             ws.cell(row=row, column=4, value=values["sum"])
+            total_sum += safe_float(values.get("sum", 0), 0)
             row += 1
+
+        # Добавляем "Общий итог" как в VBA
+        if row > 6:
+            ws.cell(row=row, column=1, value="Общий итог")
+            ws.cell(row=row, column=4, value=total_sum)
 
         log.debug(f"Записана сводная таблица: {row - 6} строк")
 
