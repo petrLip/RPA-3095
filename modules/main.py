@@ -40,7 +40,7 @@ def find_test_files():
     for f in DATA_DIR.iterdir():
         name = f.name.lower()
         # Пропускаем временные файлы и результаты
-        if name.startswith("~$") or "_opus" in name:
+        if name.startswith("~$") or "_result" in name:
             continue
 
         if f.suffix == ".xlsm" and "корректировка" in name.lower():

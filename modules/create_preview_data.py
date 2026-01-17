@@ -168,13 +168,13 @@ class CreatePreviewDataProcessor:
         self.vgo_file_path = Path(vgo_file_path)
         self.progress_callback = progress_callback
 
-        # Путь для сохранения результата - всегда *_opus.xlsx
+        # Путь для сохранения результата - всегда *_result.xlsx
         base_name = self.macros_file_path.stem
-        # Убираем _opus если уже есть, чтобы не дублировать
-        if base_name.endswith("_opus"):
-            base_name = base_name[:-5]
+        # Убираем _result если уже есть, чтобы не дублировать
+        if base_name.endswith("_result"):
+            base_name = base_name[:-7]
         self.output_path = self.macros_file_path.with_stem(
-            base_name + "_opus"
+            base_name + "_result"
         ).with_suffix(".xlsx")
 
         self.wb_macros: Optional[ExcelHandler] = None
@@ -255,7 +255,7 @@ class CreatePreviewDataProcessor:
                 processor.evaluate_vgo_t2_mapping_formulas(ws_map)
                 log.info("Вычисление формул завершено")
 
-            # 12. Сохраняем файл с суффиксом _opus
+            # 12. Сохраняем файл с суффиксом _result
             self._update_progress(95, "Сохранение файла...")
             self.wb_macros.save(file_path=str(self.output_path))
 
