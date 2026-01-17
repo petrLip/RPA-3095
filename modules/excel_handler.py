@@ -493,6 +493,14 @@ class TableFormatter:
         bottom=Side(style="medium"),
     )
 
+    # Пунктирные границы для внутренних линий таблицы МАРЖА
+    DASHED_BORDER = Border(
+        left=Side(style="dashed"),
+        right=Side(style="dashed"),
+        top=Side(style="dashed"),
+        bottom=Side(style="dashed"),
+    )
+
     DOUBLE_BORDER = Border(
         left=Side(style="double"),
         right=Side(style="double"),
@@ -538,10 +546,32 @@ class TableFormatter:
 
     def _format_marja(self, start_row: int, max_row: int, max_col: int):
         """Форматирование листа МАРЖА"""
+        # Внешние границы - medium, внутренние - пунктирные
         for row in range(2, max_row + 1):
             for col in range(1, max_col + 1):
                 cell = self.ws.cell(row=row, column=col)
-                cell.border = self.MEDIUM_BORDER
+                # Определяем, является ли ячейка внешней (на краю таблицы)
+                is_first_row = row == 2
+                is_last_row = row == max_row
+                is_first_col = col == 1
+                is_last_col = col == max_col
+                
+                # Для внутренних ячеек используем пунктирные границы
+                if not (is_first_row or is_last_row or is_first_col or is_last_col):
+                    cell.border = self.DASHED_BORDER
+                else:
+                    # Для внешних ячеек создаем границу с medium внешними и dashed внутренними
+                    left_style = "medium" if is_first_col else "dashed"
+                    right_style = "medium" if is_last_col else "dashed"
+                    top_style = "medium" if is_first_row else "dashed"
+                    bottom_style = "medium" if is_last_row else "dashed"
+                    
+                    cell.border = Border(
+                        left=Side(style=left_style),
+                        right=Side(style=right_style),
+                        top=Side(style=top_style),
+                        bottom=Side(style=bottom_style),
+                    )
 
         # Форматирование последних колонок
         for col in range(1, max_col + 1):
