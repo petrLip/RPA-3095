@@ -1027,24 +1027,49 @@ class VgoProcessor:
         # Создаём словарь мэппинга для OPEX
         # ВАЖНО: VBA не удаляет дубликаты, поэтому сохраняем все строки
         mapping_dict = {}
+        skipped_mapping_rows = 0
+        keys_from_formula = 0
+        keys_from_parts = 0
 
         for map_row in vgo_mapping:
             if not map_row or len(map_row) < 2:
+                skipped_mapping_rows += 1
                 continue
+            
             # Создаём ключ из БЕ + ЦФО КВ
-            key_val = safe_str(map_row[0])
-            if key_val.startswith("="):
-                # Если формула - составляем из отдельных колонок
-                be = safe_str(map_row[1])
-                cfo = safe_str(map_row[2]) if len(map_row) > 2 else ""
-                key_val = f"{be}{cfo}"
+            # Пробуем сначала использовать map_row[0], если это формула - составляем из отдельных колонок
+            key_val = None
+            
+            # Вариант 1: Используем map_row[0] если это не формула
+            val_0 = safe_str(map_row[0]).strip() if len(map_row) > 0 and map_row[0] else ""
+            if val_0 and not val_0.startswith("=") and val_0 not in ("БЕ + ЦФО", "БЕ поставщика"):
+                key_val = val_0
+                keys_from_formula += 1
+            
+            # Вариант 2: Если map_row[0] - формула или пустое, составляем из map_row[1] и map_row[2]
+            if not key_val:
+                be = safe_str(map_row[1]).strip() if len(map_row) > 1 and map_row[1] else ""
+                cfo = safe_str(map_row[2]).strip() if len(map_row) > 2 and map_row[2] else ""
+                if be and cfo:
+                    key_val = f"{be}{cfo}"
+                    keys_from_parts += 1
+            
+            # Если ключ не создан, пропускаем строку
+            if not key_val or key_val in ("БЕ + ЦФО", "БЕ поставщика"):
+                skipped_mapping_rows += 1
+                if not key_val:
+                    log.debug(f"Не удалось составить ключ из мэппинга: map_row[0]={map_row[0] if len(map_row) > 0 else None}, map_row[1]={map_row[1] if len(map_row) > 1 else None}, map_row[2]={map_row[2] if len(map_row) > 2 else None}")
+                continue
 
-            if key_val and key_val not in ("БЕ + ЦФО", "БЕ поставщика"):
-                if key_val not in mapping_dict:
-                    mapping_dict[key_val] = []
-                mapping_dict[key_val].append(map_row)
+            if key_val not in mapping_dict:
+                mapping_dict[key_val] = []
+            mapping_dict[key_val].append(map_row)
 
-        log.info(f"Мэппинг ВГО для OPEX блока: {len(mapping_dict)} ключей")
+        if skipped_mapping_rows > 0:
+            log.debug(f"Пропущено {skipped_mapping_rows} строк мэппинга при создании словаря")
+        log.info(f"Мэппинг ВГО для OPEX блока: {len(mapping_dict)} ключей, {sum(len(v) for v in mapping_dict.values())} строк")
+        log.debug(f"Ключи созданы: {keys_from_formula} из map_row[0], {keys_from_parts} из map_row[1]+map_row[2]")
+        log.debug(f"Ключи созданы: {keys_from_formula} из map_row[0], {keys_from_parts} из map_row[1]+map_row[2]")
 
         # Предвычисляем суммы расходов по (БЕ, ЦФО КВ) для формулы процента
         # Формула: =IF(W="",100,(W*100)/SUMIFS(W:W,R:R,R,S:S,S))
@@ -1059,40 +1084,63 @@ class VgoProcessor:
             expense_sums[key] = expense_sums.get(key, 0) + expense
 
         # Заполняем данные OPEX
-        # В VBA в этом блоке используется агрегирование по (БЕ поставщика, ЦФО КВ)
-        # с накоплением суммы и фиксацией БЕ покупателя из первой строки пары.
-        unique_pivot_pairs = {}
-        for _, pv_values in filtered_pivot.items():
-            be_supplier = safe_str(pv_values["be_supplier"])
-            cfo = safe_str(pv_values["cfo"])
-            pair_key = (be_supplier, cfo)
-
-            if pair_key not in unique_pivot_pairs:
-                unique_pivot_pairs[pair_key] = {
-                    "be_supplier": be_supplier,
-                    "cfo": cfo,
-                    "sum": safe_float(pv_values.get("sum", 0), 0),
-                    "be_buyer": safe_str(pv_values.get("be_buyer", "")),
-                }
-            else:
-                unique_pivot_pairs[pair_key]["sum"] += safe_float(
-                    pv_values.get("sum", 0), 0
-                )
-
-        log.info(
-            f"Уникальных пар (БЕ, ЦФО) для OPEX блока: {len(unique_pivot_pairs)}"
-        )
-
+        # ВАЖНО: VBA проходит по КАЖДОЙ строке сводной таблицы, НЕ агрегируя по ключу!
+        # Это означает, что для каждой строки сводной (с уникальной БЕ покупателя)
+        # создаются отдельные строки OPEX, даже если ключ (БЕ, ЦФО) одинаковый
+        # См. tests/analyze_vba_opex.py: "В VBA проходят по КАЖДОЙ строке, не группируя по ключу!"
+        # Пример: если в сводной есть:
+        #   - 53126 005 01203 8 650 587
+        #   - 53126 005 01200 8 591 693
+        # То для каждой из этих строк создаются отдельные строки OPEX на основе мэппинга
+        
         # Сначала собираем все строки, потом сортируем как в VBA
         opex_rows_to_write = []
+        missing_keys = []  # Для логирования отсутствующих ключей
+        skipped_rows_count = 0  # Счётчик пропущенных строк
+        processed_pivot_rows = 0  # Счётчик обработанных строк сводной
 
-        for _, pv_values in unique_pivot_pairs.items():
-            be_supplier = pv_values["be_supplier"]
-            cfo = pv_values["cfo"]
-            be_buyer = pv_values["be_buyer"]
+        # Проходим по КАЖДОЙ строке сводной таблицы (не агрегируем!)
+        for _, pv_values in filtered_pivot.items():
+            processed_pivot_rows += 1
+            be_supplier = safe_str(pv_values["be_supplier"]).strip()
+            cfo = safe_str(pv_values["cfo"]).strip()
+            be_buyer = safe_str(pv_values["be_buyer"]).strip()
             lookup_key = f"{be_supplier}{cfo}"
+            
+            # Пробуем найти ключ в мэппинге (точное совпадение)
+            # Если не найдено, пробуем варианты без пробелов и с разными форматами
+            found_in_mapping = lookup_key in mapping_dict
+            if not found_in_mapping:
+                # Пробуем варианты ключа для поиска соответствия
+                lookup_variants = [
+                    lookup_key,
+                    lookup_key.replace(" ", ""),
+                    f"{be_supplier} {cfo}",
+                    f"{be_supplier}{cfo}".upper(),
+                    f"{be_supplier}{cfo}".lower(),
+                ]
+                for variant in lookup_variants:
+                    if variant in mapping_dict:
+                        lookup_key = variant
+                        found_in_mapping = True
+                        log.debug(f"Найден ключ по варианту: '{lookup_key}' (исходный: '{f'{be_supplier}{cfo}'}')")
+                        break
+                
+                # Если все еще не найдено, пробуем частичный поиск (по БЕ поставщика)
+                if not found_in_mapping:
+                    # Ищем ключи, которые начинаются с БЕ поставщика
+                    for map_key in mapping_dict.keys():
+                        if map_key.startswith(be_supplier):
+                            # Проверяем, может быть ЦФО в другом формате
+                            remaining = map_key[len(be_supplier):]
+                            # Убираем пробелы и сравниваем
+                            if remaining.strip() == cfo.strip() or remaining.replace(" ", "") == cfo.replace(" ", ""):
+                                lookup_key = map_key
+                                found_in_mapping = True
+                                log.info(f"Найден ключ по частичному совпадению: '{lookup_key}' (искали: '{be_supplier}{cfo}')")
+                                break
 
-            if lookup_key in mapping_dict:
+            if found_in_mapping:
                 matched_rows = mapping_dict[lookup_key]
 
                 for map_row in matched_rows:
@@ -1118,6 +1166,7 @@ class VgoProcessor:
                                 log.debug(
                                     f"Статья PL '{stat_pl}' не найдена в справочнике"
                                 )
+                                # Оставляем пустую строку вместо пропуска
                         else:
                             stat_oper = ""
 
@@ -1139,18 +1188,18 @@ class VgoProcessor:
 
                     percent_val = self._round_percent_for_pivot(percent_val)
 
-                    # Пропускаем если нет данных или формула
+                    # Пропускаем только если нет ЦФО операционного (это обязательное поле)
+                    # stat_oper может быть пустым - это допустимо
                     skip_reason = None
                     if not cfo_oper:
                         skip_reason = "no cfo_oper"
-                    elif not stat_oper:
-                        skip_reason = "no stat_oper"
                     elif safe_str(cfo_oper).startswith("="):
                         skip_reason = f"cfo_oper is formula: {cfo_oper}"
-                    elif stat_oper == "Статья не найдена":
-                        skip_reason = "stat_oper = Статья не найдена"
+                    # НЕ пропускаем если stat_oper пустое или "Статья не найдена" - записываем строку
 
                     if skip_reason:
+                        skipped_rows_count += 1
+                        log.debug(f"Пропуск строки: {skip_reason} для ключа {lookup_key}")
                         continue
 
                     base_sum = safe_float(pv_values.get("sum", 0), 0)
@@ -1162,16 +1211,56 @@ class VgoProcessor:
                             "be_supplier": be_supplier,
                             "cfo": cfo,
                             "cfo_oper": cfo_oper,
-                            "stat_oper": stat_oper,
+                            "stat_oper": stat_oper if stat_oper else "",  # Пустая строка вместо None
                             "percent_val": percent_val,
                             "calculated_sum": calculated_sum,
                             "base_sum": base_sum,
                             "be_buyer": be_buyer,
                         }
                     )
+            else:
+                # Ключ не найден в мэппинге - логируем, но не создаём строки
+                # В VBA такие строки тоже не создаются, если нет соответствия в мэппинге
+                missing_keys.append(lookup_key)
+
+        if missing_keys:
+            log.warning(
+                f"Найдено {len(missing_keys)} ключей без соответствия в мэппинге ВГО (первые 10: {missing_keys[:10]})"
+            )
+            # Логируем все отсутствующие ключи для отладки
+            missing_keys_sorted = sorted(set(missing_keys))
+            log.info(f"Все отсутствующие ключи ({len(missing_keys_sorted)}): {missing_keys_sorted}")
+            
+            # Проверяем, есть ли эти ключи в мэппинге с другими вариантами написания
+            all_mapping_keys = sorted(mapping_dict.keys())
+            log.info(f"Всего ключей в мэппинге: {len(all_mapping_keys)}")
+            log.info(f"Примеры ключей из мэппинга (первые 20): {all_mapping_keys[:20]}")
+            
+            # Пытаемся найти похожие ключи (для диагностики)
+            similar_found = []
+            for missing_key in missing_keys_sorted[:10]:  # Проверяем первые 10
+                # Ищем похожие ключи (содержат те же цифры)
+                be_part = missing_key[:5] if len(missing_key) >= 5 else missing_key
+                cfo_part = missing_key[5:] if len(missing_key) > 5 else ""
+                
+                for map_key in all_mapping_keys:
+                    if be_part in map_key or (cfo_part and cfo_part in map_key):
+                        similar_found.append((missing_key, map_key))
+                        break
+            
+            if similar_found:
+                log.info(f"Найдены похожие ключи (отсутствующий -> найденный в мэппинге):")
+                for missing, found in similar_found[:5]:
+                    log.info(f"  '{missing}' -> похож на '{found}'")
+        
+        if skipped_rows_count > 0:
+            log.info(f"Пропущено {skipped_rows_count} строк из-за отсутствия обязательных полей")
+        
+        log.info(f"Обработано {processed_pivot_rows} строк сводной таблицы, подготовлено {len(opex_rows_to_write)} строк для записи в OPEX блок")
 
         # Аггрегируем дубликаты как в VBA (сводная сжимает строки)
         aggregated_rows = {}
+        aggregated_count = 0
         for row_data in opex_rows_to_write:
             key = (
                 row_data["be_cfo"],
@@ -1187,8 +1276,11 @@ class VgoProcessor:
             else:
                 aggregated_rows[key]["calculated_sum"] += row_data["calculated_sum"]
                 aggregated_rows[key]["base_sum"] += row_data["base_sum"]
+                aggregated_count += 1
 
         opex_rows_to_write = list(aggregated_rows.values())
+        if aggregated_count > 0:
+            log.info(f"Агрегировано {aggregated_count} дубликатов, осталось {len(opex_rows_to_write)} уникальных строк (было {len(opex_rows_to_write) + aggregated_count})")
 
         # Сортировка:
         # Первичный ключ: БЕ поставщика (убывание)
