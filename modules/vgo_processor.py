@@ -219,12 +219,10 @@ class VgoProcessor:
 
                                 # Читаем значения из этих ячеек
                                 val1 = ws_map.cell(
-                                    row=row1, column=column_index_from_string(
-                                        col1)
+                                    row=row1, column=column_index_from_string(col1)
                                 ).value
                                 val2 = ws_map.cell(
-                                    row=row2, column=column_index_from_string(
-                                        col2)
+                                    row=row2, column=column_index_from_string(col2)
                                 ).value
 
                                 # Вычисляем сцепку
@@ -248,13 +246,13 @@ class VgoProcessor:
             else:
                 break  # Пустая строка - конец раздела
 
-        log.info(
-            f"Мэппинг ВГО '{section_name}': загружено {len(result)} записей")
+        log.info(f"Мэппинг ВГО '{section_name}': загружено {len(result)} записей")
 
         # Диагностика: показываем первую запись для понимания структуры
         if result:
             log.debug(
-                f"Пример первой записи мэппинга ВГО (длина {len(result[0])}): {result[0][:10]}")
+                f"Пример первой записи мэппинга ВГО (длина {len(result[0])}): {result[0][:10]}"
+            )
 
         return result
 
@@ -372,8 +370,7 @@ class VgoProcessor:
                             ).value
                         ),
                         "cfo": safe_str(
-                            ws_marja.cell(
-                                row=row, column=marja_cols.cfo_buyer).value
+                            ws_marja.cell(row=row, column=marja_cols.cfo_buyer).value
                         ),
                         "contract": safe_str(
                             ws_marja.cell(
@@ -425,8 +422,7 @@ class VgoProcessor:
                             ).value
                         ),
                         "cfo_buyer": safe_str(
-                            ws_marja.cell(
-                                row=row, column=marja_cols.cfo_buyer).value
+                            ws_marja.cell(row=row, column=marja_cols.cfo_buyer).value
                         ),
                         "contract": safe_str(
                             ws_marja.cell(
@@ -436,8 +432,7 @@ class VgoProcessor:
                     }
                 )
 
-        log.info(
-            f"Собрано записей из МАРЖА для ВГО T2: {len(arr_vgo_marja_t2)}")
+        log.info(f"Собрано записей из МАРЖА для ВГО T2: {len(arr_vgo_marja_t2)}")
 
         return arr_vgo_marja_t2
 
@@ -596,8 +591,7 @@ class VgoProcessor:
         found = helper.find_value(section_name, partial=False)
 
         if not found:
-            log.warning(
-                f"Раздел мэппинга не найден для автозаполнения: {section_name}")
+            log.warning(f"Раздел мэппинга не найден для автозаполнения: {section_name}")
             return 0
 
         section_row, section_col = found
@@ -660,25 +654,20 @@ class VgoProcessor:
             # ЦФО КВ
             if "cfo" in cols:
                 ws_map.cell(row=new_row, column=cols["cfo"], value=rpt["cfo"])
-                ws_map.cell(
-                    row=new_row, column=cols["cfo"]).number_format = "@"
+                ws_map.cell(row=new_row, column=cols["cfo"]).number_format = "@"
 
             # Статья операционная
             if "article" in cols:
-                ws_map.cell(
-                    row=new_row, column=cols["article"], value=rpt["article"])
+                ws_map.cell(row=new_row, column=cols["article"], value=rpt["article"])
 
             # Статья PL (через VLOOKUP по справочнику)
             if "article_pl" in cols:
-                article_pl = article_dict.get(
-                    rpt["article"], "Статья не найдена")
-                ws_map.cell(
-                    row=new_row, column=cols["article_pl"], value=article_pl)
+                article_pl = article_dict.get(rpt["article"], "Статья не найдена")
+                ws_map.cell(row=new_row, column=cols["article_pl"], value=article_pl)
 
             # Расходы
             if "expenses" in cols and rpt["sum"]:
-                ws_map.cell(
-                    row=new_row, column=cols["expenses"], value=rpt["sum"])
+                ws_map.cell(row=new_row, column=cols["expenses"], value=rpt["sum"])
 
             # % - будет рассчитан позже или 100 по умолчанию
             if "percent" in cols:
@@ -720,12 +709,10 @@ class VgoProcessor:
         found = helper.find_value(section_name, partial=False)
 
         if not found:
-            log.debug(
-                f"Секция '{section_name}' не найдена для вычисления формул")
+            log.debug(f"Секция '{section_name}' не найдена для вычисления формул")
             return
 
-        log.debug(
-            f"Найдена секция '{section_name}' в ({found[0]}, {found[1]})")
+        log.debug(f"Найдена секция '{section_name}' в ({found[0]}, {found[1]})")
 
         section_row, section_col = found
 
@@ -801,12 +788,10 @@ class VgoProcessor:
 
                             # Вычисляем и вставляем значение вместо формулы
                             calculated = f"{safe_str(val1)}{safe_str(val2)}"
-                            ws_map.cell(
-                                row=row, column=key_col).value = calculated
+                            ws_map.cell(row=row, column=key_col).value = calculated
                             evaluated_count += 1
                 except Exception as e:
-                    log.debug(
-                        f"Не удалось вычислить формулу {val} в строке {row}: {e}")
+                    log.debug(f"Не удалось вычислить формулу {val} в строке {row}: {e}")
 
         if evaluated_count > 0:
             log.info(
@@ -860,13 +845,11 @@ class VgoProcessor:
 
             # Договор из результатов поиска
             if key in contract_dict and contract_col:
-                ws_calc.cell(row=row, column=contract_col,
-                             value=contract_dict[key])
+                ws_calc.cell(row=row, column=contract_col, value=contract_dict[key])
                 updated += 1
             # Договор из МАРЖА
             elif contract_col and err.get("contract"):
-                ws_calc.cell(row=row, column=contract_col,
-                             value=err["contract"])
+                ws_calc.cell(row=row, column=contract_col, value=err["contract"])
 
         log.info(
             f"Обновлены договора для {updated} записей (статусы оставлены 'ОК' по умолчанию)"
@@ -905,14 +888,10 @@ class VgoProcessor:
             if safe_str(v.get("be_supplier", "")) != "Общий итог"
         }
 
-        # Check перед вторым блоком - вычисляем сумму
+        # Check перед вторым блоком - будет записан после создания CAPEX блока
         check_row = end_row_first + 3
-        total_sum = sum(safe_float(v.get("sum", 0), 0)
-                        for v in filtered_pivot.values())
-        ws_calc.cell(
-            row=check_row, column=self.START_COL_ACCOUNT + 5, value="Check")
-        ws_calc.cell(
-            row=check_row, column=self.START_COL_ACCOUNT + 6, value=-total_sum)
+        ws_calc.cell(row=check_row, column=self.START_COL_ACCOUNT + 5, value="Check")
+        # Формула Check будет записана после создания CAPEX блока
 
         # Заголовки второго блока (CAPEX для обычных ВГО)
         current_row = check_row + 2
@@ -939,6 +918,22 @@ class VgoProcessor:
         # Заполняем данные CAPEX
         # Структура: БЕ + ЦФО, БЕ поставщика, ЦФО КВ, Статья КВ, %, Сумма расходов, БЕ покупателя
         data_row = current_row + 1
+        
+        # Находим последнюю строку сводной таблицы (A-D) для формул
+        last_pivot_row = helper.get_used_range_end(4)  # Колонка D
+        if last_pivot_row < 6:
+            last_pivot_row = 6
+        
+        # Буквы колонок для формул
+        from openpyxl.utils import get_column_letter
+        col_d_letter = get_column_letter(4)  # D - Сумма расходов с накопительным итогом
+        col_a_letter = get_column_letter(1)  # A - БЕ поставщика
+        col_b_letter = get_column_letter(2)  # B - ЦФО покупателя
+        col_c_letter = get_column_letter(3)  # C - БЕ покупателя
+        col_h_letter = get_column_letter(self.START_COL_ACCOUNT + 1)  # H - БЕ поставщика в блоке
+        col_i_letter = get_column_letter(self.START_COL_ACCOUNT + 2)  # I - ЦФО КВ в блоке
+        col_k_letter = get_column_letter(self.START_COL_ACCOUNT + 4)  # K - % в блоке
+        col_m_letter = get_column_letter(self.START_COL_ACCOUNT + 6)  # M - БЕ покупателя в блоке
 
         for key, pv_values in filtered_pivot.items():
             be_supplier = safe_str(pv_values["be_supplier"])
@@ -946,30 +941,35 @@ class VgoProcessor:
 
             base_sum = safe_float(pv_values.get("sum", 0), 0)
             percent_val = 100
-            calculated_sum = -base_sum * percent_val / 100  # Отрицательное для CAPEX
 
-            # БЕ + ЦФО
-            ws_calc.cell(
-                row=data_row, column=self.START_COL_ACCOUNT, value=f"{be_supplier}{cfo}"
-            )
+            # БЕ + ЦФО - формула =H&I
+            formula_be_cfo = f"={col_h_letter}{data_row}&{col_i_letter}{data_row}"
+            ws_calc.cell(row=data_row, column=self.START_COL_ACCOUNT, value=formula_be_cfo)
+            
             # БЕ поставщика
             ws_calc.cell(
                 row=data_row, column=self.START_COL_ACCOUNT + 1, value=be_supplier
             )
             # ЦФО КВ
-            ws_calc.cell(
-                row=data_row, column=self.START_COL_ACCOUNT + 2, value=cfo)
+            ws_calc.cell(row=data_row, column=self.START_COL_ACCOUNT + 2, value=cfo)
             # Статья КВ
-            ws_calc.cell(
-                row=data_row, column=self.START_COL_ACCOUNT + 3, value="PI02")
+            ws_calc.cell(row=data_row, column=self.START_COL_ACCOUNT + 3, value="PI02")
             # %
             ws_calc.cell(
                 row=data_row, column=self.START_COL_ACCOUNT + 4, value=percent_val
             )
-            # Сумма расходов (отрицательная)
-            ws_calc.cell(
-                row=data_row, column=self.START_COL_ACCOUNT + 5, value=calculated_sum
+            
+            # Сумма расходов - формула: =-SUMIFS($D$6:$D${last},$A$6:$A${last},H{row},$B$6:$B${last},I{row},$C$6:$C${last},M{row})*K{row}%
+            formula_sum = (
+                f"=-SUMIFS("
+                f"${col_d_letter}$6:${col_d_letter}${last_pivot_row},"
+                f"${col_a_letter}$6:${col_a_letter}${last_pivot_row},{col_h_letter}{data_row},"
+                f"${col_b_letter}$6:${col_b_letter}${last_pivot_row},{col_i_letter}{data_row},"
+                f"${col_c_letter}$6:${col_c_letter}${last_pivot_row},{col_m_letter}{data_row})"
+                f"*{col_k_letter}{data_row}%"
             )
+            ws_calc.cell(row=data_row, column=self.START_COL_ACCOUNT + 5, value=formula_sum)
+            
             # БЕ покупателя
             ws_calc.cell(
                 row=data_row,
@@ -980,6 +980,13 @@ class VgoProcessor:
             data_row += 1
 
         capex_end_row = data_row - 1
+        
+        # Записываем формулу Check для CAPEX блока (перед блоком)
+        capex_first_row = current_row + 1
+        col_l_letter = get_column_letter(self.START_COL_ACCOUNT + 5)  # L - Сумма расходов
+        check_formula = f"=SUM({col_l_letter}{capex_first_row}:{col_l_letter}{capex_end_row})"
+        ws_calc.cell(row=check_row, column=self.START_COL_ACCOUNT + 6, value=check_formula)
+        
         log.info(
             f"Создан второй блок ВГО (CAPEX): {data_row - current_row - 1} записей, начиная со строки {current_row}"
         )
@@ -990,7 +997,7 @@ class VgoProcessor:
         ws_calc.cell(
             row=check_row_opex, column=self.START_COL_ACCOUNT + 5, value="Check"
         )
-        # Значение Check будет вычислено после создания OPEX блока
+        # Формула Check будет записана после создания OPEX блока
 
         # Заголовки OPEX
         opex_header_row = check_row_opex + 2
@@ -1035,30 +1042,46 @@ class VgoProcessor:
             if not map_row or len(map_row) < 2:
                 skipped_mapping_rows += 1
                 continue
-            
+
             # Создаём ключ из БЕ + ЦФО КВ
             # Пробуем сначала использовать map_row[0], если это формула - составляем из отдельных колонок
             key_val = None
-            
+
             # Вариант 1: Используем map_row[0] если это не формула
-            val_0 = safe_str(map_row[0]).strip() if len(map_row) > 0 and map_row[0] else ""
-            if val_0 and not val_0.startswith("=") and val_0 not in ("БЕ + ЦФО", "БЕ поставщика"):
+            val_0 = (
+                safe_str(map_row[0]).strip() if len(map_row) > 0 and map_row[0] else ""
+            )
+            if (
+                val_0
+                and not val_0.startswith("=")
+                and val_0 not in ("БЕ + ЦФО", "БЕ поставщика")
+            ):
                 key_val = val_0
                 keys_from_formula += 1
-            
+
             # Вариант 2: Если map_row[0] - формула или пустое, составляем из map_row[1] и map_row[2]
             if not key_val:
-                be = safe_str(map_row[1]).strip() if len(map_row) > 1 and map_row[1] else ""
-                cfo = safe_str(map_row[2]).strip() if len(map_row) > 2 and map_row[2] else ""
+                be = (
+                    safe_str(map_row[1]).strip()
+                    if len(map_row) > 1 and map_row[1]
+                    else ""
+                )
+                cfo = (
+                    safe_str(map_row[2]).strip()
+                    if len(map_row) > 2 and map_row[2]
+                    else ""
+                )
                 if be and cfo:
                     key_val = f"{be}{cfo}"
                     keys_from_parts += 1
-            
+
             # Если ключ не создан, пропускаем строку
             if not key_val or key_val in ("БЕ + ЦФО", "БЕ поставщика"):
                 skipped_mapping_rows += 1
                 if not key_val:
-                    log.debug(f"Не удалось составить ключ из мэппинга: map_row[0]={map_row[0] if len(map_row) > 0 else None}, map_row[1]={map_row[1] if len(map_row) > 1 else None}, map_row[2]={map_row[2] if len(map_row) > 2 else None}")
+                    log.debug(
+                        f"Не удалось составить ключ из мэппинга: map_row[0]={map_row[0] if len(map_row) > 0 else None}, map_row[1]={map_row[1] if len(map_row) > 1 else None}, map_row[2]={map_row[2] if len(map_row) > 2 else None}"
+                    )
                 continue
 
             if key_val not in mapping_dict:
@@ -1066,10 +1089,18 @@ class VgoProcessor:
             mapping_dict[key_val].append(map_row)
 
         if skipped_mapping_rows > 0:
-            log.debug(f"Пропущено {skipped_mapping_rows} строк мэппинга при создании словаря")
-        log.info(f"Мэппинг ВГО для OPEX блока: {len(mapping_dict)} ключей, {sum(len(v) for v in mapping_dict.values())} строк")
-        log.debug(f"Ключи созданы: {keys_from_formula} из map_row[0], {keys_from_parts} из map_row[1]+map_row[2]")
-        log.debug(f"Ключи созданы: {keys_from_formula} из map_row[0], {keys_from_parts} из map_row[1]+map_row[2]")
+            log.debug(
+                f"Пропущено {skipped_mapping_rows} строк мэппинга при создании словаря"
+            )
+        log.info(
+            f"Мэппинг ВГО для OPEX блока: {len(mapping_dict)} ключей, {sum(len(v) for v in mapping_dict.values())} строк"
+        )
+        log.debug(
+            f"Ключи созданы: {keys_from_formula} из map_row[0], {keys_from_parts} из map_row[1]+map_row[2]"
+        )
+        log.debug(
+            f"Ключи созданы: {keys_from_formula} из map_row[0], {keys_from_parts} из map_row[1]+map_row[2]"
+        )
 
         # Предвычисляем суммы расходов по (БЕ, ЦФО КВ) для формулы процента
         # Формула: =IF(W="",100,(W*100)/SUMIFS(W:W,R:R,R,S:S,S))
@@ -1092,7 +1123,7 @@ class VgoProcessor:
         #   - 53126 005 01203 8 650 587
         #   - 53126 005 01200 8 591 693
         # То для каждой из этих строк создаются отдельные строки OPEX на основе мэппинга
-        
+
         # Сначала собираем все строки, потом сортируем как в VBA
         opex_rows_to_write = []
         missing_keys = []  # Для логирования отсутствующих ключей
@@ -1106,7 +1137,7 @@ class VgoProcessor:
             cfo = safe_str(pv_values["cfo"]).strip()
             be_buyer = safe_str(pv_values["be_buyer"]).strip()
             lookup_key = f"{be_supplier}{cfo}"
-            
+
             # Пробуем найти ключ в мэппинге (точное совпадение)
             # Если не найдено, пробуем варианты без пробелов и с разными форматами
             found_in_mapping = lookup_key in mapping_dict
@@ -1123,21 +1154,27 @@ class VgoProcessor:
                     if variant in mapping_dict:
                         lookup_key = variant
                         found_in_mapping = True
-                        log.debug(f"Найден ключ по варианту: '{lookup_key}' (исходный: '{f'{be_supplier}{cfo}'}')")
+                        log.debug(
+                            f"Найден ключ по варианту: '{lookup_key}' (исходный: '{f'{be_supplier}{cfo}'}')"
+                        )
                         break
-                
+
                 # Если все еще не найдено, пробуем частичный поиск (по БЕ поставщика)
                 if not found_in_mapping:
                     # Ищем ключи, которые начинаются с БЕ поставщика
                     for map_key in mapping_dict.keys():
                         if map_key.startswith(be_supplier):
                             # Проверяем, может быть ЦФО в другом формате
-                            remaining = map_key[len(be_supplier):]
+                            remaining = map_key[len(be_supplier) :]
                             # Убираем пробелы и сравниваем
-                            if remaining.strip() == cfo.strip() or remaining.replace(" ", "") == cfo.replace(" ", ""):
+                            if remaining.strip() == cfo.strip() or remaining.replace(
+                                " ", ""
+                            ) == cfo.replace(" ", ""):
                                 lookup_key = map_key
                                 found_in_mapping = True
-                                log.info(f"Найден ключ по частичному совпадению: '{lookup_key}' (искали: '{be_supplier}{cfo}')")
+                                log.info(
+                                    f"Найден ключ по частичному совпадению: '{lookup_key}' (искали: '{be_supplier}{cfo}')"
+                                )
                                 break
 
             if found_in_mapping:
@@ -1148,13 +1185,11 @@ class VgoProcessor:
                     # [0]=БЕ+ЦФО (Q), [1]=БЕ (R), [2]=ЦФО КВ (S), [3]=ЦФО опер (T),
                     # [4]=Статья PL (U), [5]=Статья опер (V), [6]=Расходы (W), [7]=% (X)
                     cfo_oper = safe_str(map_row[3]) if len(map_row) > 3 else ""
-                    stat_oper = safe_str(map_row[5]) if len(
-                        map_row) > 5 else ""
+                    stat_oper = safe_str(map_row[5]) if len(map_row) > 5 else ""
                     stat_pl = (
                         safe_str(map_row[4]) if len(map_row) > 4 else ""
                     )  # Статья PL для VLOOKUP
-                    percent_raw = safe_str(map_row[7]) if len(
-                        map_row) > 7 else "100"
+                    percent_raw = safe_str(map_row[7]) if len(map_row) > 7 else "100"
 
                     # Если stat_oper - формула VLOOKUP, вычисляем через справочник
                     if safe_str(stat_oper).startswith("="):
@@ -1174,10 +1209,8 @@ class VgoProcessor:
                     if safe_str(percent_raw).startswith("="):
                         # Формула: =IF(W="",100,(W*100)/SUMIFS(W:W,R:R,R,S:S,S))
                         be = safe_str(map_row[1])
-                        cfo_kv = safe_str(map_row[2]) if len(
-                            map_row) > 2 else ""
-                        expense = safe_float(map_row[6], 0) if len(
-                            map_row) > 6 else 0
+                        cfo_kv = safe_str(map_row[2]) if len(map_row) > 2 else ""
+                        expense = safe_float(map_row[6], 0) if len(map_row) > 6 else 0
                         sum_expense = expense_sums.get((be, cfo_kv), 0)
                         if expense and sum_expense:
                             percent_val = (expense * 100) / sum_expense
@@ -1199,7 +1232,9 @@ class VgoProcessor:
 
                     if skip_reason:
                         skipped_rows_count += 1
-                        log.debug(f"Пропуск строки: {skip_reason} для ключа {lookup_key}")
+                        log.debug(
+                            f"Пропуск строки: {skip_reason} для ключа {lookup_key}"
+                        )
                         continue
 
                     base_sum = safe_float(pv_values.get("sum", 0), 0)
@@ -1211,7 +1246,9 @@ class VgoProcessor:
                             "be_supplier": be_supplier,
                             "cfo": cfo,
                             "cfo_oper": cfo_oper,
-                            "stat_oper": stat_oper if stat_oper else "",  # Пустая строка вместо None
+                            "stat_oper": stat_oper
+                            if stat_oper
+                            else "",  # Пустая строка вместо None
                             "percent_val": percent_val,
                             "calculated_sum": calculated_sum,
                             "base_sum": base_sum,
@@ -1229,34 +1266,42 @@ class VgoProcessor:
             )
             # Логируем все отсутствующие ключи для отладки
             missing_keys_sorted = sorted(set(missing_keys))
-            log.info(f"Все отсутствующие ключи ({len(missing_keys_sorted)}): {missing_keys_sorted}")
-            
+            log.info(
+                f"Все отсутствующие ключи ({len(missing_keys_sorted)}): {missing_keys_sorted}"
+            )
+
             # Проверяем, есть ли эти ключи в мэппинге с другими вариантами написания
             all_mapping_keys = sorted(mapping_dict.keys())
             log.info(f"Всего ключей в мэппинге: {len(all_mapping_keys)}")
             log.info(f"Примеры ключей из мэппинга (первые 20): {all_mapping_keys[:20]}")
-            
+
             # Пытаемся найти похожие ключи (для диагностики)
             similar_found = []
             for missing_key in missing_keys_sorted[:10]:  # Проверяем первые 10
                 # Ищем похожие ключи (содержат те же цифры)
                 be_part = missing_key[:5] if len(missing_key) >= 5 else missing_key
                 cfo_part = missing_key[5:] if len(missing_key) > 5 else ""
-                
+
                 for map_key in all_mapping_keys:
                     if be_part in map_key or (cfo_part and cfo_part in map_key):
                         similar_found.append((missing_key, map_key))
                         break
-            
+
             if similar_found:
-                log.info(f"Найдены похожие ключи (отсутствующий -> найденный в мэппинге):")
+                log.info(
+                    f"Найдены похожие ключи (отсутствующий -> найденный в мэппинге):"
+                )
                 for missing, found in similar_found[:5]:
                     log.info(f"  '{missing}' -> похож на '{found}'")
-        
+
         if skipped_rows_count > 0:
-            log.info(f"Пропущено {skipped_rows_count} строк из-за отсутствия обязательных полей")
-        
-        log.info(f"Обработано {processed_pivot_rows} строк сводной таблицы, подготовлено {len(opex_rows_to_write)} строк для записи в OPEX блок")
+            log.info(
+                f"Пропущено {skipped_rows_count} строк из-за отсутствия обязательных полей"
+            )
+
+        log.info(
+            f"Обработано {processed_pivot_rows} строк сводной таблицы, подготовлено {len(opex_rows_to_write)} строк для записи в OPEX блок"
+        )
 
         # Аггрегируем дубликаты как в VBA (сводная сжимает строки)
         aggregated_rows = {}
@@ -1280,7 +1325,9 @@ class VgoProcessor:
 
         opex_rows_to_write = list(aggregated_rows.values())
         if aggregated_count > 0:
-            log.info(f"Агрегировано {aggregated_count} дубликатов, осталось {len(opex_rows_to_write)} уникальных строк (было {len(opex_rows_to_write) + aggregated_count})")
+            log.info(
+                f"Агрегировано {aggregated_count} дубликатов, осталось {len(opex_rows_to_write)} уникальных строк (было {len(opex_rows_to_write) + aggregated_count})"
+            )
 
         # Сортировка:
         # Первичный ключ: БЕ поставщика (убывание)
@@ -1295,15 +1342,29 @@ class VgoProcessor:
         # 2-й ключ, возрастание
         opex_rows_to_write.sort(key=lambda x: x["be_buyer"])
         opex_rows_to_write.sort(
-            key=lambda x: x["be_supplier"], reverse=True)  # 1-й ключ, убывание
+            key=lambda x: x["be_supplier"], reverse=True
+        )  # 1-й ключ, убывание
 
         # Записываем отсортированные данные
         data_row = opex_header_row + 1
+        first_opex_row = data_row
+        last_opex_row = opex_header_row + len(opex_rows_to_write)
+        
+        # Буквы колонок для формул OPEX
+        # Структура: G=БЕ+ЦФО, H=БЕ поставщика, I=ЦФО КВ, J=ЦФО операционное, K=Статья операционная, L=%, M=Сумма расходов, N=Сумма с накопительным итогом, O=БЕ покупателя
+        from openpyxl.utils import get_column_letter
+        col_h_letter = get_column_letter(self.START_COL_ACCOUNT + 1)  # H - БЕ поставщика
+        col_j_letter = get_column_letter(self.START_COL_ACCOUNT + 3)  # J - ЦФО операционное
+        col_k_letter = get_column_letter(self.START_COL_ACCOUNT + 4)  # K - Статья операционная
+        col_l_letter = get_column_letter(self.START_COL_ACCOUNT + 5)  # L - %
+        col_m_letter = get_column_letter(self.START_COL_ACCOUNT + 7)  # N - Сумма расходов с накопительным итогом
+        col_o_letter = get_column_letter(self.START_COL_ACCOUNT + 8)  # O - БЕ покупателя
+        
         for row_data in opex_rows_to_write:
-            # БЕ + ЦФО
-            ws_calc.cell(
-                row=data_row, column=self.START_COL_ACCOUNT, value=row_data["be_cfo"]
-            )
+            # БЕ + ЦФО - формула =H&J (где H - БЕ поставщика, J - ЦФО операционное)
+            formula_be_cfo = f"={col_h_letter}{data_row}&{col_j_letter}{data_row}"
+            ws_calc.cell(row=data_row, column=self.START_COL_ACCOUNT, value=formula_be_cfo)
+            
             # БЕ поставщика
             ws_calc.cell(
                 row=data_row,
@@ -1332,12 +1393,21 @@ class VgoProcessor:
                 column=self.START_COL_ACCOUNT + 5,
                 value=row_data["percent_val"],
             )
-            # Сумма расходов
-            ws_calc.cell(
-                row=data_row,
-                column=self.START_COL_ACCOUNT + 6,
-                value=row_data["calculated_sum"],
+            
+            # Сумма расходов - формула: =SUMIFS($N{row}:$N{row},$H{row}:$H{row},H{row},$K{row}:$K{row},K{row},$J{row}:$J{row},J{row},$O{row}:$O{row},O{row})*L{row}%
+            # Где: N=Сумма с накопительным итогом, H=БЕ поставщика, K=Статья операционная, J=ЦФО операционное, O=БЕ покупателя, L=%
+            # ВАЖНО: В VBA используется R1C1 нотация RC{col}:RC{col}, что означает только текущую строку!
+            formula_sum = (
+                f"=SUMIFS("
+                f"${col_m_letter}{data_row}:${col_m_letter}{data_row},"
+                f"${col_h_letter}{data_row}:${col_h_letter}{data_row},{col_h_letter}{data_row},"
+                f"${col_k_letter}{data_row}:${col_k_letter}{data_row},{col_k_letter}{data_row},"
+                f"${col_j_letter}{data_row}:${col_j_letter}{data_row},{col_j_letter}{data_row},"
+                f"${col_o_letter}{data_row}:${col_o_letter}{data_row},{col_o_letter}{data_row})"
+                f"*{col_l_letter}{data_row}%"
             )
+            ws_calc.cell(row=data_row, column=self.START_COL_ACCOUNT + 6, value=formula_sum)
+            
             # Сумма расходов с накопительным итогом
             ws_calc.cell(
                 row=data_row,
@@ -1353,18 +1423,12 @@ class VgoProcessor:
 
             data_row += 1
 
-        # Вычисляем сумму OPEX блока для Check
-        opex_sum = 0
-        for row in range(opex_header_row + 1, data_row):
-            val = ws_calc.cell(
-                row=row, column=self.START_COL_ACCOUNT + 6).value
-            if val:
-                opex_sum += safe_float(val, 0)
-
-        # Записываем Check (сумма M колонки OPEX блока)
-        ws_calc.cell(
-            row=check_row_opex, column=self.START_COL_ACCOUNT + 6, value=opex_sum
-        )
+        # Записываем формулу Check (сумма M колонки OPEX блока)
+        opex_first_row = opex_header_row + 1
+        opex_last_row = data_row - 1
+        col_m_letter = get_column_letter(self.START_COL_ACCOUNT + 6)  # M - Сумма расходов
+        check_opex_formula = f"=SUM({col_m_letter}{opex_first_row}:{col_m_letter}{opex_last_row})"
+        ws_calc.cell(row=check_row_opex, column=self.START_COL_ACCOUNT + 6, value=check_opex_formula)
 
         log.info(
             f"Создан третий блок ВГО (OPEX): {data_row - opex_header_row - 1} записей, начиная со строки {opex_header_row}"
@@ -1416,14 +1480,9 @@ class VgoProcessor:
         log.info(f"Создан словарь ЦФО КВ из МАРЖА: {len(cfo_kv_dict)} записей")
 
         # Check после первого блока (строка end_row_first + 3)
+        # Формула будет записана после создания CAPEX блока
         check_row_1 = end_row_first + 3
-        total_sum = sum(safe_float(v.get("sum", 0), 0)
-                        for v in filtered_pivot.values())
-        ws_calc.cell(row=check_row_1,
-                     column=self.START_COL_ACCOUNT + 6, value="Check")
-        ws_calc.cell(
-            row=check_row_1, column=self.START_COL_ACCOUNT + 7, value=-total_sum
-        )
+        ws_calc.cell(row=check_row_1, column=self.START_COL_ACCOUNT + 6, value="Check")
 
         # ==================== ВТОРОЙ БЛОК (CAPEX) ====================
         current_row = check_row_1 + 2
@@ -1467,6 +1526,23 @@ class VgoProcessor:
 
         # Данные CAPEX
         data_row = current_row + 1
+        
+        # Находим последнюю строку сводной таблицы (A-D) для формул
+        last_pivot_row = helper.get_used_range_end(4)  # Колонка D
+        if last_pivot_row < 6:
+            last_pivot_row = 6
+        
+        # Буквы колонок для формул
+        from openpyxl.utils import get_column_letter
+        col_d_letter = get_column_letter(4)  # D - Сумма расходов с накопительным итогом
+        col_a_letter = get_column_letter(1)  # A - БЕ поставщика
+        col_b_letter = get_column_letter(2)  # B - Договор (для T2)
+        col_c_letter = get_column_letter(3)  # C - БЕ покупателя
+        col_h_letter = get_column_letter(self.START_COL_ACCOUNT + 1)  # H - БЕ поставщика в блоке
+        col_i_letter = get_column_letter(self.START_COL_ACCOUNT + 2)  # I - Договор в блоке
+        col_l_letter = get_column_letter(self.START_COL_ACCOUNT + 5)  # L - % в блоке
+        col_n_letter = get_column_letter(self.START_COL_ACCOUNT + 7)  # N - БЕ покупателя в блоке
+        
         for key, pv_values in filtered_pivot.items():
             be_supplier = safe_str(pv_values["be_supplier"])
             cfo = safe_str(pv_values["cfo"])  # Договор
@@ -1477,34 +1553,36 @@ class VgoProcessor:
             stat_kv = "PI02"  # Константа для CAPEX
             percent_val = 100
 
-            base_sum = safe_float(pv_values.get("sum", 0), 0)
-            calculated_sum = -base_sum * percent_val / 100
-
-            # БЕ + Договор
-            ws_calc.cell(
-                row=data_row, column=self.START_COL_ACCOUNT, value=f"{be_supplier}{cfo}"
-            )
+            # БЕ + Договор - формула =H&I
+            formula_be_dog = f"={col_h_letter}{data_row}&{col_i_letter}{data_row}"
+            ws_calc.cell(row=data_row, column=self.START_COL_ACCOUNT, value=formula_be_dog)
+            
             # БЕ поставщика
             ws_calc.cell(
                 row=data_row, column=self.START_COL_ACCOUNT + 1, value=be_supplier
             )
             # Договор
-            ws_calc.cell(
-                row=data_row, column=self.START_COL_ACCOUNT + 2, value=cfo)
+            ws_calc.cell(row=data_row, column=self.START_COL_ACCOUNT + 2, value=cfo)
             # ЦФО КВ
-            ws_calc.cell(
-                row=data_row, column=self.START_COL_ACCOUNT + 3, value=cfo_kv)
+            ws_calc.cell(row=data_row, column=self.START_COL_ACCOUNT + 3, value=cfo_kv)
             # Статья КВ
-            ws_calc.cell(
-                row=data_row, column=self.START_COL_ACCOUNT + 4, value=stat_kv)
+            ws_calc.cell(row=data_row, column=self.START_COL_ACCOUNT + 4, value=stat_kv)
             # %
             ws_calc.cell(
                 row=data_row, column=self.START_COL_ACCOUNT + 5, value=percent_val
             )
-            # Сумма расходов (отрицательная)
-            ws_calc.cell(
-                row=data_row, column=self.START_COL_ACCOUNT + 6, value=calculated_sum
+            
+            # Сумма расходов - формула: =-SUMIFS($D$6:$D${last},$A$6:$A${last},H{row},$B$6:$B${last},I{row},$C$6:$C${last},N{row})*L{row}%
+            formula_sum = (
+                f"=-SUMIFS("
+                f"${col_d_letter}$6:${col_d_letter}${last_pivot_row},"
+                f"${col_a_letter}$6:${col_a_letter}${last_pivot_row},{col_h_letter}{data_row},"
+                f"${col_b_letter}$6:${col_b_letter}${last_pivot_row},{col_i_letter}{data_row},"
+                f"${col_c_letter}$6:${col_c_letter}${last_pivot_row},{col_n_letter}{data_row})"
+                f"*{col_l_letter}{data_row}%"
             )
+            ws_calc.cell(row=data_row, column=self.START_COL_ACCOUNT + 6, value=formula_sum)
+            
             # БЕ покупателя
             ws_calc.cell(
                 row=data_row,
@@ -1515,16 +1593,19 @@ class VgoProcessor:
             data_row += 1
 
         capex_end_row = data_row - 1
+        capex_first_row = current_row + 1
+        
+        # Записываем формулу Check после первого блока (перед CAPEX)
+        from openpyxl.utils import get_column_letter
+        col_m_letter = get_column_letter(self.START_COL_ACCOUNT + 6)  # M - Сумма расходов
+        check_formula_1 = f"=SUM({col_m_letter}{capex_first_row}:{col_m_letter}{capex_end_row})"
+        ws_calc.cell(row=check_row_1, column=self.START_COL_ACCOUNT + 7, value=check_formula_1)
+        
         log.info(f"CAPEX блок: {data_row - current_row - 1} записей")
 
-        # Check после CAPEX (через 2 строки) - вычисляем через Python
-        # Значение = положительная сумма (противоположная Check после сводной)
+        # Check после CAPEX (через 2 строки) - формула будет записана после создания OPEX блока
         check_row_2 = capex_end_row + 3
-        ws_calc.cell(row=check_row_2,
-                     column=self.START_COL_ACCOUNT + 6, value="Check")
-        ws_calc.cell(
-            row=check_row_2, column=self.START_COL_ACCOUNT + 7, value=total_sum
-        )
+        ws_calc.cell(row=check_row_2, column=self.START_COL_ACCOUNT + 6, value="Check")
 
         # ==================== ТРЕТИЙ БЛОК (OPEX) ====================
         current_row = check_row_2 + 2
@@ -1551,6 +1632,19 @@ class VgoProcessor:
 
         # Данные OPEX
         data_row = current_row + 1
+        first_opex_row = data_row
+        
+        # Буквы колонок для формул OPEX T2
+        from openpyxl.utils import get_column_letter
+        col_h_letter = get_column_letter(self.START_COL_ACCOUNT + 1)  # H - БЕ поставщика
+        col_i_letter = get_column_letter(self.START_COL_ACCOUNT + 2)  # I - Договор
+        col_j_letter = get_column_letter(self.START_COL_ACCOUNT + 3)  # J - ЦФО операционное
+        col_k_letter = get_column_letter(self.START_COL_ACCOUNT + 4)  # K - Статья операционная
+        col_l_letter = get_column_letter(self.START_COL_ACCOUNT + 5)  # L - %
+        col_m_letter = get_column_letter(self.START_COL_ACCOUNT + 6)  # M - Сумма расходов
+        col_n_letter = get_column_letter(self.START_COL_ACCOUNT + 7)  # N - Сумма расходов с накопительным итогом
+        col_o_letter = get_column_letter(self.START_COL_ACCOUNT + 8)  # O - БЕ покупателя
+        
         for key, pv_values in filtered_pivot.items():
             be_supplier = safe_str(pv_values["be_supplier"])
             cfo = safe_str(pv_values["cfo"])  # Договор
@@ -1563,8 +1657,7 @@ class VgoProcessor:
                     # Структура ВГО T2: [0]=БЕ+Договор, [1]=БЕ, [2]=ЦФО опер, [3]=Договор,
                     # [4]=Статья опер, [5]=Расходы, [6]=%
                     cfo_oper = safe_str(map_row[2]) if len(map_row) > 2 else ""
-                    stat_oper = safe_str(map_row[4]) if len(
-                        map_row) > 4 else ""
+                    stat_oper = safe_str(map_row[4]) if len(map_row) > 4 else ""
                     percent_val = (
                         safe_float(map_row[6], 100) if len(map_row) > 6 else 100
                     )
@@ -1574,14 +1667,11 @@ class VgoProcessor:
                         continue
 
                     base_sum = safe_float(pv_values.get("sum", 0), 0)
-                    calculated_sum = base_sum * percent_val / 100
 
-                    # БЕ + Договор
-                    ws_calc.cell(
-                        row=data_row,
-                        column=self.START_COL_ACCOUNT,
-                        value=f"{be_supplier}{cfo}",
-                    )
+                    # БЕ + Договор - формула =H&I
+                    formula_be_dog = f"={col_h_letter}{data_row}&{col_i_letter}{data_row}"
+                    ws_calc.cell(row=data_row, column=self.START_COL_ACCOUNT, value=formula_be_dog)
+                    
                     # БЕ поставщика
                     ws_calc.cell(
                         row=data_row,
@@ -1606,12 +1696,11 @@ class VgoProcessor:
                         column=self.START_COL_ACCOUNT + 5,
                         value=percent_val,
                     )
-                    # Сумма расходов
-                    ws_calc.cell(
-                        row=data_row,
-                        column=self.START_COL_ACCOUNT + 6,
-                        value=calculated_sum,
-                    )
+                    
+                    # Сумма расходов - формула будет создана после записи всех данных
+                    # Пока записываем значение, потом заменим на формулу
+                    calculated_sum = base_sum * percent_val / 100
+                    
                     # Сумма расходов с накопительным итогом
                     ws_calc.cell(
                         row=data_row, column=self.START_COL_ACCOUNT + 7, value=base_sum
@@ -1624,7 +1713,29 @@ class VgoProcessor:
                     )
 
                     data_row += 1
+        
+        # Теперь создаём формулы для "Сумма расходов" после записи всех данных
+        last_opex_row = data_row - 1
+        for row in range(first_opex_row, last_opex_row + 1):
+            # Формула: =SUMIFS($N{row}:$N{row},$H{row}:$H{row},H{row},$K{row}:$K{row},K{row},$J{row}:$J{row},J{row},$O{row}:$O{row},O{row})*L{row}%
+            # Где: N=Сумма с накопительным итогом, H=БЕ поставщика, K=Статья операционная, J=ЦФО операционное, O=БЕ покупателя, L=%
+            # ВАЖНО: В VBA используется R1C1 нотация RC{col}:RC{col}, что означает только текущую строку!
+            formula_sum = (
+                f"=SUMIFS("
+                f"${col_n_letter}{row}:${col_n_letter}{row},"
+                f"${col_h_letter}{row}:${col_h_letter}{row},{col_h_letter}{row},"
+                f"${col_k_letter}{row}:${col_k_letter}{row},{col_k_letter}{row},"
+                f"${col_j_letter}{row}:${col_j_letter}{row},{col_j_letter}{row},"
+                f"${col_o_letter}{row}:${col_o_letter}{row},{col_o_letter}{row})"
+                f"*{col_l_letter}{row}%"
+            )
+            ws_calc.cell(row=row, column=self.START_COL_ACCOUNT + 6, value=formula_sum)
 
+        # Записываем формулу Check после CAPEX (перед OPEX)
+        col_m_t2_letter = get_column_letter(self.START_COL_ACCOUNT + 6)  # M - Сумма расходов
+        check_formula_2 = f"=SUM({col_m_t2_letter}{first_opex_row}:{col_m_t2_letter}{last_opex_row})"
+        ws_calc.cell(row=check_row_2, column=self.START_COL_ACCOUNT + 7, value=check_formula_2)
+        
         log.info(f"OPEX блок: {data_row - current_row - 1} записей")
         log.info(f"Создано 2 блока для ВГО T2: CAPEX и OPEX")
 
@@ -1676,8 +1787,7 @@ def process_vgo_sheet_full(
     )
 
     # 5. Добавляем номера договоров к проблемным записям
-    arr_err_be = processor.enrich_err_be_with_contracts(
-        arr_err_be, arr_vgo_marja)
+    arr_err_be = processor.enrich_err_be_with_contracts(arr_err_be, arr_vgo_marja)
 
     # 6. Поиск в сводной ВГО
     if vgo_pivot is not None:
@@ -1691,8 +1801,7 @@ def process_vgo_sheet_full(
         vgo_mapping = processor.get_vgo_mapping_data(ws_map, is_t2)
 
     # 8. Обновляем статусы на листе расчёта
-    processor.update_analysis_status(
-        ws_calc, arr_err_be, processor.result.arr_rpt)
+    processor.update_analysis_status(ws_calc, arr_err_be, processor.result.arr_rpt)
 
     # 9. Создаём блоки мэппинга
     if is_t2:
@@ -1706,7 +1815,6 @@ def process_vgo_sheet_full(
         )
     else:
         # Для обычных ВГО листов - только один блок OPEX
-        processor.create_vgo_second_block(
-            ws_calc, pivot_data, vgo_mapping, is_t2)
+        processor.create_vgo_second_block(ws_calc, pivot_data, vgo_mapping, is_t2)
 
     return processor.result
